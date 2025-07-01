@@ -1,0 +1,14 @@
+<!-- detail.wxml -->
+<view class="container">
+  <image class="venue-cover" src="{{venueInfo.cover}}"></image>
+  <view class="info-box">
+    <text class="title">{{venueInfo.name}}</text>
+    <view class="price-section">
+      <text>价格：￥{{venueInfo.price}}/小时</text>
+    </view>
+    <view class="time-picker">
+      <picker mode="time" bindchange="selectTime">选择时段</picker>
+      <button bindtap="handleBooking">立即预约</button>
+    </view>
+  </view>
+</view>

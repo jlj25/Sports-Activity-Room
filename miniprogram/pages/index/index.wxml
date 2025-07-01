@@ -1,0 +1,39 @@
+<!--index.wxml-->
+
+<!-- 顶部分类标签 -->
+<scroll-view class="category-tabs" scroll-x>
+  <view class="tab active">推荐</view>
+  <view class="tab">冰上运动</view>
+  <view class="tab">船艇运动</view>
+  <view class="tab">户外运动</view>
+</scroll-view>
+
+<!-- 筛选栏 -->
+<view class="filter-bar">
+  <view class="filter-item">人气最高 ▼</view>
+  <view class="filter-item">全城 ▼</view>
+</view>
+
+<!-- 活动室列表 -->
+<scroll-view class="venue-list" scroll-y>
+  <view wx:for="{{venues}}" class="venue-card" bindtap="navigateToDetail" data-id="{{item.id}}">
+    <image src="{{item.cover}}" class="venue-img" mode="aspectFill" />
+    <view class="venue-badge">在线订场</view>
+    <view class="venue-info">
+      <text class="venue-title">{{item.name}}</text>
+      <view class="venue-rating">
+        <text class="star">★★★★★</text>
+        <text class="score">{{item.rating}}</text>
+      </view>
+      <text class="venue-location">{{item.location}}</text>
+      <view class="venue-tags">
+        <text wx:for="{{item.sports}}" class="tag">{{item}}</text>
+      </view>
+      <view class="venue-price">
+        <text class="price">￥{{item.price}}</text>
+        <text class="unit">/小时起</text>
+      </view>
+    </view>
+  </view>
+</scroll-view>
+</view>

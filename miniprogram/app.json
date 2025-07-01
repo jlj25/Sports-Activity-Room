@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index",  
+    "pages/detail/detail",
+    "pages/my/my"  
+  ],
+  "window": {
+    "navigationBarTitleText": "体育活动室",
+    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#07c160"
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents"
+}
