@@ -1,0 +1,22 @@
+<view class="publish-container">
+  <view class="title">发布新活动</view>
+  <view class="form-item">
+    <text>活动名称</text>
+    <input placeholder="请输入活动名称" />
+  </view>
+  <view class="form-item">
+    <text>活动类型</text>
+    <picker range="{{categories}}" bindchange="onCategoryChange">
+      <view>{{categories[categoryIndex]}}</view>
+    </picker>
+  </view>
+  <view class="form-item">
+    <text>活动时间</text>
+    <input placeholder="请选择时间" />
+  </view>
+  <view class="form-item">
+    <text>活动地点</text>
+    <input placeholder="请输入地点" />
+  </view>
+  <button class="submit-btn">发布</button>
+</view> 

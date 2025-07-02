@@ -1,0 +1,10 @@
+<view class="my-container">
+  <view class="user-info">
+    <image class="avatar" src="/images/default_avatar.png" mode="aspectFill" />
+    <view class="nickname">未登录</view>
+  </view>
+  <view class="my-list">
+    <view class="my-item">我的活动</view>
+    <view class="my-item">设置</view>
+  </view>
+</view>

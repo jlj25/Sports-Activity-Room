@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",  
     "pages/detail/detail",
+    "pages/publish/publish",
     "pages/my/my"  
   ],
   "window": {
@@ -11,5 +12,31 @@
   },
   "style": "v2",
   "componentFramework": "glass-easel",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "活动广场",
+        "iconPath": "images/tab_home.jpg",
+        "selectedIconPath": "images/tab_home_active.jpg"
+      },
+      {
+        "pagePath": "pages/publish/publish",
+        "text": "发布",
+        "iconPath": "images/tab_publish.jpg",
+        "selectedIconPath": "images/tab_publish_active.jpg"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "images/tab_my.jpg",
+        "selectedIconPath": "images/tab_my_active.jpg"
+      }
+    ]
+  }
 }
