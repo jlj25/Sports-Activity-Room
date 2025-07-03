@@ -1,6 +1,10 @@
 // my.ts
+import { venues } from '../../utils/venues';
+
 Page({
   data: {
+    venues,
+    favoriteVenues: [],
     bookings: [
       {
         id: 1,
@@ -15,6 +19,28 @@ Page({
     }
   },
   onLoad() {
-    // 这里可以请求用户信息
+    // 从本地存储或后端获取收藏列表
+    const favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
+    this.setData({
+      favoriteVenues
+    });
+  },
+  getVenueName(id: number) {
+    // 根据 id 获取场馆名称
+    const venue = this.data.venues.find((v: any) => v.id === id);
+    return venue ? venue.name : '';
+  },
+  removeFavorite(e: any) {
+    const id = e.currentTarget.dataset.id;
+    let favoriteVenues = this.data.favoriteVenues;
+    favoriteVenues = favoriteVenues.filter((fid: number) => fid !== id);
+    this.setData({
+      favoriteVenues
+    });
+    wx.setStorageSync('favoriteVenues', favoriteVenues);
+    wx.showToast({
+      title: '已移除收藏',
+      icon: 'none'
+    });
   }
-})
+});

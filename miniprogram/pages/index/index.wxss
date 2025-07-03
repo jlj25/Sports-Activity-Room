@@ -141,3 +141,49 @@ page {
   color: #666;
   margin-left: 4rpx;
 }
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background-color: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 8rpx;
+  border: 1rpx solid #ccc;
+  border-radius: 8rpx;
+}
+
+.search-bar button {
+  margin-left: 16rpx;
+  padding: 8rpx 16rpx;
+  background-color: #07c160;
+  color: #fff;
+  border-radius: 8rpx;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  padding: 8rpx 16rpx;
+  background-color: #fff;
+  border: 1rpx solid #07c160;
+  color: #07c160;
+  border-radius: 16rpx;
+}
+
+.favorite-btn.active {
+  background-color: #07c160;
+  color: #fff;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}

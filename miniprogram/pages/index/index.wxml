@@ -1,20 +1,27 @@
 <!--index.wxml-->
 
-<!-- 顶部分类标签 -->
-<scroll-view class="category-tabs" scroll-x>
-  <view class="tab {{activeCategory == idx ? 'active' : ''}}" wx:for="{{categories}}" wx:key="index" data-idx="{{idx}}" bindtap="onCategoryTap">{{item}}</view>
-</scroll-view>
-
-<!-- 筛选栏 -->
-<view class="filter-bar">
-  <view class="filter-item" wx:for="{{filters}}" wx:key="index" data-idx="{{idx}}" bindtap="onFilterTap">{{item}} ▼</view>
+<!-- 在顶部添加搜索框 -->
+<view class="search-bar">
+  <input type="text" placeholder="搜索活动场馆" bindinput="onSearchInput" />
+  <button bindtap="onSearch">搜索</button>
 </view>
 
-<!-- 活动室列表 -->
+<!-- 顶部分类标签 -->
+<scroll-view class="category-tabs" scroll-x>
+  <view class="tab {{activeCategory == index ? 'active' : ''}}" wx:for="{{categories}}" wx:key="index" data-idx="{{index}}" bindtap="onCategoryTap">{{item}}</view>
+</scroll-view>
+
+<!-- 修改筛选栏 -->
+<view class="filter-bar">
+  <view class="filter-item" bindtap="openPriceFilter">价格筛选 ▼</view>
+  <view class="filter-item" bindtap="openRatingFilter">评分筛选 ▼</view>
+</view>
+
+<!-- 帖子列表 -->
 <scroll-view class="venue-list" scroll-y>
-  <view wx:for="{{venues}}" wx:key="id" class="venue-card" bindtap="navigateToDetail" data-id="{{item.id}}">
+  <view wx:for="{{filteredVenues}}" wx:key="id" class="venue-card" bindtap="navigateToDetail" data-id="{{item.id}}">
     <image src="{{item.cover}}" class="venue-img" mode="aspectFill" />
-    <view class="venue-badge">在线订场</view>
+    <view class="venue-badge">{{item.category}}</view>
     <view class="venue-info">
       <text class="venue-title">{{item.name}}</text>
       <view class="venue-rating">
@@ -29,6 +36,10 @@
         <text class="price">￥{{item.price}}</text>
         <text class="unit">/小时起</text>
       </view>
+      <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即预约</button>
+      <button class="favorite-btn" bindtap="toggleFavorite" data-id="{{item.id}}">
+    {{isFavorite(item.id) ? '已收藏' : '收藏'}}
+  </button>
     </view>
   </view>
 </scroll-view>

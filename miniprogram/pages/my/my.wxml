@@ -7,4 +7,10 @@
     <view class="my-item">我的活动</view>
     <view class="my-item">设置</view>
   </view>
+  <view class="favorite-list">
+  <view wx:for="{{favoriteVenues}}" wx:key="id" class="favorite-item">
+    <text>{{getVenueName(item)}}</text>
+    <button bindtap="removeFavorite" data-id="{{item}}">移除</button>
+  </view>
+</view>
 </view>

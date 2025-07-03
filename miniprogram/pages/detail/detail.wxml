@@ -1,14 +1,30 @@
 <!-- detail.wxml -->
-<view class="container">
-  <image class="venue-cover" src="{{venueInfo.cover}}"></image>
-  <view class="info-box">
-    <text class="title">{{venueInfo.name}}</text>
-    <view class="price-section">
-      <text>价格：￥{{venueInfo.price}}/小时</text>
-    </view>
-    <view class="time-picker">
-      <picker mode="time" bindchange="selectTime">选择时段</picker>
-      <button bindtap="handleBooking">立即预约</button>
-    </view>
+<view class="detail-container">
+  <image class="detail-img" src="{{venue.cover}}" mode="aspectFill" />
+  <view class="detail-badge">{{venue.category}}</view>
+  <view class="detail-title">{{venue.name}}</view>
+  <view class="detail-rating">
+    <text class="star">★★★★★</text>
+    <text class="score">{{venue.rating}}</text>
   </view>
+  <view class="detail-location">{{venue.location}}</view>
+  <view class="detail-tags">
+    <text wx:for="{{venue.sports}}" wx:key="index" class="tag">{{item}}</text>
+  </view>
+  <view class="detail-price">
+    <text class="price">￥{{venue.price}}</text>
+    <text class="unit">/小时起</text>
+  </view>
+  <button class="detail-reserve-btn">立即预约</button>
+  <!-- 在详情页添加评论和评分区域 -->
+<view class="comment-section">
+  <view class="rating">
+    <text>评分：</text>
+    <picker mode="selector" range="{{[1, 2, 3, 4, 5]}}" bindchange="onRatingChange">
+      <view>{{selectedRating}}</view>
+    </picker>
+  </view>
+  <textarea placeholder="发表评论" bindinput="onCommentInput"></textarea>
+  <button bindtap="submitComment">提交评论</button>
+</view>
 </view>
