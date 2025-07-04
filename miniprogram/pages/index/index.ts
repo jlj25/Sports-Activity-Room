@@ -5,7 +5,6 @@ Page({
     venues: [] as any[],
     categories: ['全部', '足球', '篮球', '乒乓球', '羽毛球', '排球'],
     activeCategory: 0,
-    filters: ['人气最高', '全城'],
     filteredVenues: [] as any[],
     searchKeyword: '',
     priceRange: [0, 1000],
