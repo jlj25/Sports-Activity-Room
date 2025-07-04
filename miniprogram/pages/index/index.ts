@@ -1,41 +1,77 @@
-import { venues } from '../../utils/venues';
+import { API_BASE_URL } from '../../utils/config';
 
 Page({
   data: {
     venues: [] as any[],
-    categories: ['全部', '足球', '篮球', '乒乓球', '羽毛球', '排球'],
+    categories: ['全部', '足球', '篮球', '乒乓球', '羽毛球', '排球', '网球', '游泳', '健身'],
     activeCategory: 0,
     filteredVenues: [] as any[],
     searchKeyword: '',
     priceRange: [0, 1000],
     ratingRange: [0, 5],
-    favoriteVenues: []
+    favoriteVenues: [] as number[],
+    loading: false,
+    userId: null as number | null
   },
 
-  isFavorite(id: number) {
+  // 检查是否收藏
+  isFavorite(id: number): boolean {
     return this.data.favoriteVenues.includes(id);
   },
-  toggleFavorite(e: any) {
-    const id = e.currentTarget.dataset.id;
-    let favoriteVenues = this.data.favoriteVenues;
-    if (this.isFavorite(id)) {
-      favoriteVenues = favoriteVenues.filter((fid: number) => fid !== id);
+
+  // 切换收藏状态
+  async toggleFavorite(e: any) {
+    if (!this.data.userId) {
       wx.showToast({
-        title: '已取消收藏',
+        title: '请先登录',
         icon: 'none'
       });
-    } else {
-      favoriteVenues.push(id);
+      return;
+    }
+
+    const venueId = e.currentTarget.dataset.id;
+    
+    try {
+      const res: any = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${API_BASE_URL}/favorites`,
+          method: 'POST',
+          data: {
+            userId: this.data.userId,
+            venueId: venueId
+          },
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      if (res.statusCode === 200) {
+        let favoriteVenues = this.data.favoriteVenues;
+        if (res.data.isFavorite) {
+          favoriteVenues.push(venueId);
+          wx.showToast({
+            title: '已收藏',
+            icon: 'success'
+          });
+        } else {
+          favoriteVenues = favoriteVenues.filter(id => id !== venueId);
+          wx.showToast({
+            title: '已取消收藏',
+            icon: 'none'
+          });
+        }
+        this.setData({ favoriteVenues });
+      }
+    } catch (error) {
+      console.error('收藏操作失败:', error);
       wx.showToast({
-        title: '已收藏',
-        icon: 'success'
+        title: '操作失败',
+        icon: 'none'
       });
     }
-    this.setData({
-      favoriteVenues
-    });
   },
   
+  // 价格筛选
   openPriceFilter() {
     wx.showActionSheet({
       itemList: ['0 - 100', '100 - 200', '200 - 500', '500以上'],
@@ -63,10 +99,12 @@ Page({
         this.setData({
           priceRange: [min, max]
         });
-        this.filterVenues(this.data.activeCategory);
+        this.fetchVenues();
       }
     });
   },
+
+  // 评分筛选
   openRatingFilter() {
     wx.showActionSheet({
       itemList: ['0 - 2分', '2 - 3分', '3 - 4分', '4 - 5分'],
@@ -94,80 +132,146 @@ Page({
         this.setData({
           ratingRange: [min, max]
         });
-        this.filterVenues(this.data.activeCategory);
+        this.fetchVenues();
       }
     });
   },
-  filterVenues(idx: number) {
-    let filtered = this.data.venues;
-    if (idx !== 0) {
-      const category = this.data.categories[idx];
-      filtered = filtered.filter((v: any) => v.category === category);
+
+  // 从后端获取场馆数据
+  async fetchVenues() {
+    this.setData({ loading: true });
+    
+    try {
+      const params: any = {};
+      
+      // 搜索关键词
+      if (this.data.searchKeyword) {
+        params.search = this.data.searchKeyword;
+      }
+      
+      // 分类筛选
+      if (this.data.activeCategory !== 0) {
+        params.category = this.data.categories[this.data.activeCategory];
+      }
+      
+      // 价格筛选
+      const [minPrice, maxPrice] = this.data.priceRange;
+      if (minPrice > 0) params.priceMin = minPrice;
+      if (maxPrice < 1000) params.priceMax = maxPrice;
+      
+      // 评分筛选
+      const [minRating, maxRating] = this.data.ratingRange;
+      if (minRating > 0) params.ratingMin = minRating;
+      if (maxRating < 5) params.ratingMax = maxRating;
+      
+      const res: any = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${API_BASE_URL}/venues`,
+          method: 'GET',
+          data: params,
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      if (res.statusCode === 200) {
+        // 处理sports字段（从JSON字符串转换为数组）
+        const venues = res.data.map((venue: any) => ({
+          ...venue,
+          sports: typeof venue.sports === 'string' ? JSON.parse(venue.sports) : venue.sports
+        }));
+        
+        this.setData({
+          venues: venues,
+          filteredVenues: venues
+        });
+      }
+    } catch (error) {
+      console.error('获取场馆数据失败:', error);
+      wx.showToast({
+        title: '获取数据失败',
+        icon: 'none'
+      });
+    } finally {
+      this.setData({ loading: false });
     }
-    const [minPrice, maxPrice] = this.data.priceRange;
-    const [minRating, maxRating] = this.data.ratingRange;
-    filtered = filtered.filter((v: any) => 
-      v.price >= minPrice && v.price <= maxPrice &&
-      v.rating >= minRating && v.rating <= maxRating
-    );
-    this.setData({
-      filteredVenues: filtered
-    });
   },
 
+  // 搜索输入
   onSearchInput(e: any) {
     this.setData({
       searchKeyword: e.detail.value
     });
   },
 
+  // 搜索按钮
   onSearch() {
-    const keyword = this.data.searchKeyword;
-    if (keyword) {
-      const filtered = this.data.venues.filter((v: any) => 
-        v.name.includes(keyword) || v.category.includes(keyword)
-      );
-      this.setData({
-        filteredVenues: filtered
+    this.fetchVenues();
+  },
+
+  // 页面加载
+  onLoad() {
+    // 模拟用户登录（实际项目中应该通过微信登录获取openid）
+    this.mockLogin();
+    this.fetchVenues();
+  },
+
+  // 模拟用户登录
+  async mockLogin() {
+    try {
+      const res: any = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${API_BASE_URL}/login`,
+          method: 'POST',
+          data: {
+            openid: 'test_openid_1',
+            nickname: '测试用户',
+            avatarUrl: 'https://example.com/avatar.jpg'
+          },
+          success: resolve,
+          fail: reject
+        });
       });
-    } else {
-      this.filterVenues(this.data.activeCategory);
+
+      if (res.statusCode === 200) {
+        this.setData({ userId: res.data.user.id });
+        this.fetchFavorites();
+      }
+    } catch (error) {
+      console.error('登录失败:', error);
     }
   },
 
-  onLoad() {
-    this.setData({ venues });
-    this.filterVenues(0);
+  // 获取用户收藏
+  async fetchFavorites() {
+    if (!this.data.userId) return;
+    
+    try {
+      const res: any = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${API_BASE_URL}/favorites/${this.data.userId}`,
+          method: 'GET',
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      if (res.statusCode === 200) {
+        const favoriteIds = res.data.map((venue: any) => venue.id);
+        this.setData({ favoriteVenues: favoriteIds });
+      }
+    } catch (error) {
+      console.error('获取收藏失败:', error);
+    }
   },
 
   // 顶部分类点击
   onCategoryTap(e: any) {
     const idx = e.currentTarget.dataset.idx;
     this.setData({ activeCategory: idx });
-    this.filterVenues(idx);
+    this.fetchVenues();
     wx.showToast({
       title: `切换到${this.data.categories[idx]}`,
-      icon: 'none',
-    });
-  },
-
-  // 根据分类筛选帖子
-  filterVenues(idx: number) {
-    if (idx === 0) {
-      this.setData({ filteredVenues: this.data.venues });
-    } else {
-      const category = this.data.categories[idx];
-      this.setData({
-        filteredVenues: this.data.venues.filter((v: any) => v.category === category)
-      });
-    }
-  },
-
-  // 筛选栏点击
-  onFilterTap(e: any) {
-    const idx = e.currentTarget.dataset.idx;
-    wx.showToast({
-      title: `点击了${this.data.filters[idx]}`,
       icon: 'none',
     });
   },
@@ -181,6 +285,24 @@ Page({
 
   // 立即预约按钮
   onReserve(e: any) {
-    wx.showToast({ title: '预约功能暂未开放', icon: 'none' });
+    if (!this.data.userId) {
+      wx.showToast({ 
+        title: '请先登录', 
+        icon: 'none' 
+      });
+      return;
+    }
+    
+    const venueId = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/publish/publish?venueId=${venueId}`
+    });
   },
+
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.fetchVenues().then(() => {
+      wx.stopPullDownRefresh();
+    });
+  }
 });

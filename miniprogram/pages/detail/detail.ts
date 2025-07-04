@@ -1,16 +1,68 @@
+import { API_BASE_URL } from '../../utils/config';
+
 // detail.ts
 Page({
   data: {
     venueInfo: {
-      id: 1,
-      name: '羽毛球馆',
-      price: 80,
-      cover: '/images/badminton.jpg',
-      businessHours: '09:00-22:00'
+      id: 0,
+      name: '',
+      price: 0,
+      cover: '',
+      businessHours: '',
+      category: '',
+      rating: 0,
+      location: '',
+      sports: [],
+      description: ''
     },
     selectedTime: '',
     selectedRating: 3,
-    comment: ''
+    comment: '',
+    loading: true
+  },
+
+  onLoad(options: any) {
+    if (options.id) {
+      this.fetchVenueDetail(options.id);
+    }
+  },
+
+  // 获取场馆详情
+  async fetchVenueDetail(venueId: string) {
+    try {
+      const res: any = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${API_BASE_URL}/venues/${venueId}`,
+          method: 'GET',
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      if (res.statusCode === 200) {
+        const venue = res.data;
+        // 处理sports字段
+        if (typeof venue.sports === 'string') {
+          venue.sports = JSON.parse(venue.sports);
+        }
+        
+        this.setData({
+          venueInfo: venue,
+          loading: false
+        });
+      } else {
+        wx.showToast({
+          title: '获取场馆信息失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('获取场馆详情失败:', error);
+      wx.showToast({
+        title: '获取数据失败',
+        icon: 'none'
+      });
+    }
   },
 
   onRatingChange(e: any) {
@@ -18,11 +70,13 @@ Page({
       selectedRating: parseInt(e.detail.value) + 1
     });
   },
+
   onCommentInput(e: any) {
     this.setData({
       comment: e.detail.value
     });
   },
+
   submitComment() {
     const { selectedRating, comment } = this.data;
     if (comment) {
