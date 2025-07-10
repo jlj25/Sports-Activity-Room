@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db'); // 导入数据库连接池
+const axios = require('axios'); // 新增
 require('dotenv').config();
 
 // 创建express实例
@@ -87,20 +88,26 @@ app.get('/api/venues/:id', async (req, res) => {
 // 4. 用户登录（通过微信openid获取或创建用户）
 app.post('/api/login', async (req, res) => {
   try {
-    const { openid, nickname, avatarUrl } = req.body;
-    // 检查用户是否已存在
+    const { code, nickname, avatarUrl } = req.body;
+    // 用 code 换 openid
+    const appid = 'wx5faaae7883060a81';
+    const secret = '21e2ee4d357218713446b60f54d2050e';
+    const wxRes = await axios.get(
+      `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`
+    );
+    const { openid } = wxRes.data;
+    if (!openid) {
+      return res.status(400).json({ message: '获取openid失败', err: wxRes.data });
+    }
+    // 查库或注册
     const [users] = await pool.query('SELECT * FROM users WHERE openid = ?', [openid]);
-    
     if (users.length > 0) {
-      // 用户已存在，返回用户信息
       res.json({ user: users[0] });
     } else {
-      // 用户不存在，创建新用户
       const [result] = await pool.query(
         'INSERT INTO users (openid, nickname, avatar_url) VALUES (?, ?, ?)',
         [openid, nickname, avatarUrl]
       );
-      // 返回新创建的用户信息
       const newUser = {
         id: result.insertId,
         openid,
@@ -163,41 +170,71 @@ app.get('/api/favorites/:userId', async (req, res) => {
   }
 });
 
-// 7. 创建预约（用户预约场馆）
-app.post('/api/bookings', async (req, res) => {
+// 7. 新增活动（场馆）
+app.post('/api/venues', async (req, res) => {
   try {
-    const { userId, venueId, date, startTime, endTime } = req.body;
-    // 插入预约记录
-    await pool.query(
-      'INSERT INTO bookings (user_id, venue_id, date, start_time, end_time) VALUES (?, ?, ?, ?, ?)',
-      [userId, venueId, date, startTime, endTime]
+    const { name, price, cover, business_hours, category, rating, location, sports, description } = req.body;
+    const [result] = await pool.query(
+      'INSERT INTO venues (name, price, cover, business_hours, category, rating, location, sports, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+
+      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description]
     );
-    res.json({ message: '预约成功' });
+    res.json({ id: result.insertId, message: '活动创建成功' });
   } catch (err) {
-    console.error('预约失败：', err);
+    console.error('新增活动失败：', err);
     res.status(500).json({ message: '服务器错误' });
   }
 });
 
-// 8. 获取用户的预约记录
-app.get('/api/bookings/:userId', async (req, res) => {
+// 8. 编辑活动（场馆）
+app.put('/api/venues/:id', async (req, res) => {
   try {
-    const { userId } = req.params;
-    // 查询用户的所有预约，并关联场馆名称
-    const [bookings] = await pool.query(`
-      SELECT b.id, v.name, b.date, b.start_time, b.end_time, b.status
-      FROM bookings b
-      JOIN venues v ON b.venue_id = v.id
-      WHERE b.user_id = ?
-    `, [userId]);
-    res.json(bookings);
+    const { id } = req.params;
+    const { name, price, cover, business_hours, category, rating, location, sports, description } = req.body;
+    const [result] = await pool.query(
+      'UPDATE venues SET name=?, price=?, cover=?, business_hours=?, category=?, rating=?, location=?, sports=?, description=? WHERE id=?',
+      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description, id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '活动不存在' });
+    }
+    res.json({ message: '活动更新成功' });
   } catch (err) {
-    console.error('查询预约失败：', err);
+    console.error('编辑活动失败：', err);
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
+// 9. 删除活动（场馆）
+app.delete('/api/venues/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [result] = await pool.query('DELETE FROM venues WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '活动不存在' });
+    }
+    res.json({ message: '活动删除成功' });
+  } catch (err) {
+    console.error('删除活动失败：', err);
     res.status(500).json({ message: '服务器错误' });
   }
 });
 
 // -------------- 启动服务器 --------------
-app.listen(port, () => {
-  console.log(`后端服务器已启动，地址：http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {  // 关键修改：监听 0.0.0.0
+  console.log(`后端服务器已启动，局域网访问地址：http://${getLocalIpAddress()}:${port}`);
+  console.log(`本机访问地址：http://localhost:${port}`);
 });
+
+// 获取本机局域网 IP 的辅助函数（可选）
+function getLocalIpAddress() {
+  const interfaces = require('os').networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('192.168')) {
+        return iface.address;
+      }
+    }
+  }
+  return '0.0.0.0';
+}

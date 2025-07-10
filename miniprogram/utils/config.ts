@@ -1,5 +1,5 @@
 // 配置文件
-export const API_BASE_URL = 'http://localhost:3000/api';
+export const API_BASE_URL = 'http://172.16.17.253:3000/api';
 
 // 其他配置项
 export const CONFIG = {
@@ -13,4 +13,4 @@ export const CONFIG = {
   // 默认图片
   defaultAvatar: '/images/default-avatar.jpg',
   defaultVenueCover: '/images/default-venue.jpg'
-}; 
+};

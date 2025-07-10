@@ -2,7 +2,7 @@
   <view class="title">发布新活动</view>
   <view class="form-item">
     <text>活动名称</text>
-    <input placeholder="请输入活动名称" />
+    <input placeholder="请输入活动名称" bindinput="onNameInput" />
   </view>
   <view class="form-item">
     <text>活动类型</text>
@@ -12,11 +12,24 @@
   </view>
   <view class="form-item">
     <text>活动时间</text>
-    <input placeholder="请选择时间" />
+    <input placeholder="请输入时间，如 2025-07-10 18:00" bindinput="onTimeInput" />
   </view>
   <view class="form-item">
     <text>活动地点</text>
-    <input placeholder="请输入地点" />
+    <input placeholder="请输入地点" bindinput="onLocationInput" />
   </view>
-  <button class="submit-btn">发布</button>
-</view> 
+  <view class="form-item">
+    <text>价格(元/小时)</text>
+    <input type="digit" placeholder="请输入价格" bindinput="onPriceInput" />
+  </view>
+  <view class="form-item">
+    <text>活动封面</text>
+    <button bindtap="chooseImage">选择图片</button>
+    <image wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" style="width:120px;height:80px;margin-top:8px;" />
+  </view>
+  <view class="form-item">
+    <text>活动描述</text>
+    <textarea placeholder="请输入活动描述" bindinput="onDescInput" />
+  </view>
+  <button class="submit-btn" bindtap="onSubmit">发布</button>
+</view>

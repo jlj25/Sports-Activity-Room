@@ -1,0 +1,14 @@
+<view class="my-activities-container">
+  <view wx:if="{{activities.length === 0}}" class="empty">暂无活动</view>
+  <block wx:for="{{activities}}" wx:key="id">
+    <view class="activity-item" bindtap="goToDetail" data-id="{{item.id}}">
+      <image class="cover" src="{{item.cover}}" mode="aspectFill" />
+      <view class="info">
+        <view class="title">{{item.name}}</view>
+        <view class="time">时间：{{item.business_hours}}</view>
+        <view class="location">地点：{{item.location}}</view>
+      </view>
+    </view>
+  </block>
+</view>
+

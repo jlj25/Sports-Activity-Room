@@ -31,7 +31,9 @@
     "condition": false,
     "swc": false,
     "disableSWC": true,
-    "disableUseStrict": false
+    "disableUseStrict": false,
+    "lanIpForDev": "172.16.17.253",  
+    "urlCheck": false                 
   },
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},

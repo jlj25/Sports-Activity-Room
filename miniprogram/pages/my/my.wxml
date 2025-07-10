@@ -1,10 +1,11 @@
 <view class="my-container">
   <view class="user-info">
-    <image class="avatar" src="/images/default_avatar.png" mode="aspectFill" />
-    <view class="nickname">未登录</view>
+    <image class="avatar" src="{{userInfo.avatar}}" mode="aspectFill" />
+    <view class="nickname">{{userInfo.nickname}}</view>
   </view>
   <view class="my-list">
-    <view class="my-item">我的活动</view>
+    <view class="my-item" bindtap="goToMyActivities">我的活动</view>
+    <view class="my-item" bindtap="goToMyFavorites">我的收藏</view>
     <view class="my-item">设置</view>
   </view>
   <view class="favorite-list">
@@ -13,4 +14,5 @@
     <button bindtap="removeFavorite" data-id="{{item}}">移除</button>
   </view>
 </view>
+  <button class="login-btn" wx:if="{{!isLogin}}" open-type="getUserInfo" bindtap="onLogin">微信一键登录</button>
 </view>
