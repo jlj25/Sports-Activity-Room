@@ -35,3 +35,16 @@
 .my-item:last-child {
   border-bottom: none;
 }
+.modal-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); z-index: 1000;
+}
+.modal-content {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  background: #fff; border-radius: 12px; width: 80vw; z-index: 1001;
+  box-shadow: 0 4px 24px #0002; padding: 20px;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; }
+.close-btn { background: #e64340; color: #fff; border: none; border-radius: 8px; padding: 4px 12px; }
+.activity-item { margin: 12px 0; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+.empty { text-align: center; color: #888; margin: 20px 0; }

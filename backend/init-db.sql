@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS venues (
   location VARCHAR(200),
   sports JSON,
   description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  creator_id INT NOT NULL, -- 新增字段，活动发布者
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- 创建收藏表

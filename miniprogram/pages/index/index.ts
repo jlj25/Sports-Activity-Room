@@ -28,14 +28,14 @@ Page({
       });
       return;
     }
-
     const venueId = e.currentTarget.dataset.id;
-    
+    let favoriteVenues = this.data.favoriteVenues;
+    const isFav = favoriteVenues.includes(venueId);
     try {
       const res: any = await new Promise((resolve, reject) => {
         wx.request({
           url: `${API_BASE_URL}/favorites`,
-          method: 'POST',
+          method: isFav ? 'DELETE' : 'POST',
           data: {
             userId: this.data.userId,
             venueId: venueId
@@ -44,30 +44,22 @@ Page({
           fail: reject
         });
       });
-
       if (res.statusCode === 200) {
-        let favoriteVenues = this.data.favoriteVenues;
-        if (res.data.isFavorite) {
-          favoriteVenues.push(venueId);
-          wx.showToast({
-            title: '已收藏',
-            icon: 'success'
-          });
+        if (isFav) {
+          // 取消收藏
+          favoriteVenues = favoriteVenues.filter((id: number) => id !== venueId);
+          wx.showToast({ title: '已取消收藏', icon: 'none' });
         } else {
-          favoriteVenues = favoriteVenues.filter(id => id !== venueId);
-          wx.showToast({
-            title: '已取消收藏',
-            icon: 'none'
-          });
+          // 添加收藏
+          favoriteVenues = [...favoriteVenues, venueId];
+          wx.showToast({ title: '已收藏', icon: 'success' });
         }
         this.setData({ favoriteVenues });
+      } else {
+        wx.showToast({ title: '操作失败', icon: 'none' });
       }
-    } catch (error) {
-      console.error('收藏操作失败:', error);
-      wx.showToast({
-        title: '操作失败',
-        icon: 'none'
-      });
+    } catch (err) {
+      wx.showToast({ title: '网络错误', icon: 'none' });
     }
   },
   
@@ -211,35 +203,8 @@ Page({
 
   // 页面加载
   onLoad() {
-    // 模拟用户登录（实际项目中应该通过微信登录获取openid）
-    this.mockLogin();
+    // 移除 mockLogin 相关内容，首页只依赖真实登录
     this.fetchVenues();
-  },
-
-  // 模拟用户登录
-  async mockLogin() {
-    try {
-      const res: any = await new Promise((resolve, reject) => {
-        wx.request({
-          url: `${API_BASE_URL}/login`,
-          method: 'POST',
-          data: {
-            openid: 'test_openid_1',
-            nickname: '测试用户',
-            avatarUrl: 'https://example.com/avatar.jpg'
-          },
-          success: resolve,
-          fail: reject
-        });
-      });
-
-      if (res.statusCode === 200) {
-        this.setData({ userId: res.data.user.id });
-        this.fetchFavorites();
-      }
-    } catch (error) {
-      console.error('登录失败:', error);
-    }
   },
 
   // 获取用户收藏

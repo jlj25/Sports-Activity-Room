@@ -3,6 +3,24 @@ const cors = require('cors');
 const pool = require('./db'); // 导入数据库连接池
 const axios = require('axios'); // 新增
 require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
+// 设置multer存储配置
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads'));
+  },
+  filename: function (req, file, cb) {
+    // 保证文件名唯一
+    const ext = path.extname(file.originalname);
+    const basename = path.basename(file.originalname, ext);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, basename + '-' + uniqueSuffix + ext);
+  }
+});
+const upload = multer({ storage });
 
 // 创建express实例
 const app = express();
@@ -85,40 +103,41 @@ app.get('/api/venues/:id', async (req, res) => {
   }
 });
 
-// 4. 用户登录（通过微信openid获取或创建用户）
+// 微信授权登录接口（标准版：后端用 code 换 openid）
+const WX_APPID = 'wx5faaae7883060a81'; // TODO: 替换为你的AppID
+const WX_SECRET = '21e2ee4d357218713446b60f54d2050e'; // TODO: 替换为你的AppSecret
+
 app.post('/api/login', async (req, res) => {
+  const { code, nickname, avatarUrl } = req.body;
+  if (!code) return res.status(400).json({ error: '缺少code' });
   try {
-    const { code, nickname, avatarUrl } = req.body;
-    // 用 code 换 openid
-    const appid = 'wx5faaae7883060a81';
-    const secret = '21e2ee4d357218713446b60f54d2050e';
-    const wxRes = await axios.get(
-      `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`
-    );
-    const { openid } = wxRes.data;
-    if (!openid) {
-      return res.status(400).json({ message: '获取openid失败', err: wxRes.data });
-    }
-    // 查库或注册
-    const [users] = await pool.query('SELECT * FROM users WHERE openid = ?', [openid]);
-    if (users.length > 0) {
-      res.json({ user: users[0] });
+    // 1. 用 code 换 openid
+    const wxResp = await axios.get('https://api.weixin.qq.com/sns/jscode2session', {
+      params: {
+        appid: WX_APPID,
+        secret: WX_SECRET,
+        js_code: code,
+        grant_type: 'authorization_code'
+      }
+    });
+    const { openid } = wxResp.data;
+    if (!openid) return res.status(400).json({ error: 'code无效', detail: wxResp.data });
+
+    // 2. 查找/注册用户
+    const [rows] = await pool.query('SELECT * FROM users WHERE openid = ?', [openid]);
+    let user;
+    if (rows.length > 0) {
+      user = rows[0];
+      // 更新昵称和头像
+      await pool.query('UPDATE users SET nickname = ?, avatar_url = ? WHERE openid = ?', [nickname, avatarUrl, openid]);
     } else {
-      const [result] = await pool.query(
-        'INSERT INTO users (openid, nickname, avatar_url) VALUES (?, ?, ?)',
-        [openid, nickname, avatarUrl]
-      );
-      const newUser = {
-        id: result.insertId,
-        openid,
-        nickname,
-        avatar_url: avatarUrl
-      };
-      res.json({ user: newUser });
+      // 新用户注册
+      const [result] = await pool.query('INSERT INTO users (openid, nickname, avatar_url) VALUES (?, ?, ?)', [openid, nickname, avatarUrl]);
+      user = { id: result.insertId, openid, nickname, avatar_url: avatarUrl };
     }
+    res.json({ user });
   } catch (err) {
-    console.error('登录失败：', err);
-    res.status(500).json({ message: '服务器错误' });
+    res.status(500).json({ error: '服务器错误', detail: err.message });
   }
 });
 
@@ -173,11 +192,11 @@ app.get('/api/favorites/:userId', async (req, res) => {
 // 7. 新增活动（场馆）
 app.post('/api/venues', async (req, res) => {
   try {
-    const { name, price, cover, business_hours, category, rating, location, sports, description } = req.body;
+    const { name, price, cover, business_hours, category, rating, location, sports, description, creator_id } = req.body;
+    if (!creator_id) return res.status(400).json({ message: '缺少creator_id' });
     const [result] = await pool.query(
-      'INSERT INTO venues (name, price, cover, business_hours, category, rating, location, sports, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-
-      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description]
+      'INSERT INTO venues (name, price, cover, business_hours, category, rating, location, sports, description, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description, creator_id]
     );
     res.json({ id: result.insertId, message: '活动创建成功' });
   } catch (err) {
@@ -190,10 +209,11 @@ app.post('/api/venues', async (req, res) => {
 app.put('/api/venues/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, cover, business_hours, category, rating, location, sports, description } = req.body;
+    const { name, price, cover, business_hours, category, rating, location, sports, description, creator_id } = req.body;
+    if (!creator_id) return res.status(400).json({ message: '缺少creator_id' });
     const [result] = await pool.query(
-      'UPDATE venues SET name=?, price=?, cover=?, business_hours=?, category=?, rating=?, location=?, sports=?, description=? WHERE id=?',
-      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description, id]
+      'UPDATE venues SET name=?, price=?, cover=?, business_hours=?, category=?, rating=?, location=?, sports=?, description=?, creator_id=? WHERE id=?',
+      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description, creator_id, id]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: '活动不存在' });
@@ -219,6 +239,71 @@ app.delete('/api/venues/:id', async (req, res) => {
     res.status(500).json({ message: '服务器错误' });
   }
 });
+
+// 获取某用户发布的活动
+app.get('/api/my_venues/:creator_id', async (req, res) => {
+  try {
+    const { creator_id } = req.params;
+    const [venues] = await pool.query('SELECT * FROM venues WHERE creator_id = ?', [creator_id]);
+    res.json(venues);
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
+// 获取某活动的评论（带楼中楼结构）
+app.get('/api/comments/:venueId', async (req, res) => {
+  const { venueId } = req.params;
+  // 查询所有评论及用户信息
+  const [rows] = await pool.query(
+    `SELECT c.*, u.nickname, u.avatar_url FROM comments c JOIN users u ON c.user_id = u.id WHERE c.venue_id = ? ORDER BY c.created_at ASC`,
+    [venueId]
+  );
+  // 构建楼中楼结构
+  const commentMap = {};
+  rows.forEach(c => { c.replies = []; commentMap[c.id] = c; });
+  const rootComments = [];
+  rows.forEach(c => {
+    if (c.parent_id) {
+      if (commentMap[c.parent_id]) commentMap[c.parent_id].replies.push(c);
+    } else {
+      rootComments.push(c);
+    }
+  });
+  res.json(rootComments);
+});
+
+// 发布评论/回复
+app.post('/api/comments', async (req, res) => {
+  const { venue_id, user_id, content, parent_id, reply_to_user_id } = req.body;
+  if (!venue_id || !user_id || !content) return res.status(400).json({ message: '参数不全' });
+  await pool.query(
+    'INSERT INTO comments (venue_id, user_id, content, parent_id, reply_to_user_id) VALUES (?, ?, ?, ?, ?)',
+    [venue_id, user_id, content, parent_id || null, reply_to_user_id || null]
+  );
+  res.json({ message: '评论成功' });
+});
+
+// 删除评论（仅本人或管理员可删）
+app.delete('/api/comments/:id', async (req, res) => {
+  const { id } = req.params;
+  // 这里简单实现：直接删除（如需权限校验可扩展）
+  await pool.query('DELETE FROM comments WHERE id = ?', [id]);
+  res.json({ message: '删除成功' });
+});
+
+// 图片上传接口
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: '未收到文件' });
+  }
+  // 构造图片URL（假设前端通过http://服务器地址:端口/uploads/xxx.jpg访问）
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
+
+// 静态资源托管uploads目录
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // -------------- 启动服务器 --------------
 app.listen(port, '0.0.0.0', () => {  // 关键修改：监听 0.0.0.0

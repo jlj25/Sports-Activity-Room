@@ -1,6 +1,6 @@
 // miniprogram/utils/venues.ts
 
-const BASE_URL = 'http://172.16.17.253:3000/api'; // 根据实际后端地址调整
+const BASE_URL = 'http://192.168.43.222:3000/api'; // 根据实际后端地址调整
 
 // 新增活动
 export async function createVenue(data: any) {

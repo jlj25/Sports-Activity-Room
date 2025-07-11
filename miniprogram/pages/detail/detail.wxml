@@ -1,6 +1,6 @@
 <!-- detail.wxml -->
 <view class="detail-container">
-  <image class="detail-img" src="{{venueInfo.cover}}" mode="aspectFill" />
+  <image class="detail-img" src="{{venueInfo.cover}}" mode="widthFix" style="width:100%;max-width:100vw;display:block;margin:0 auto;" />
   <view class="detail-badge">{{venueInfo.category}}</view>
   <view class="detail-title">{{venueInfo.name}}</view>
   <view class="detail-rating">
@@ -21,5 +21,48 @@
     <text>{{venueInfo.description}}</text>
   </view>
   <button class="detail-reserve-btn">立即预约</button>
+  <button class="detail-delete-btn" bindtap="deleteVenue" style="margin-top:16px;background:#e64340;color:#fff;">删除该活动</button>
+  <!-- 评论区 -->
+  <view class="comment-section">
+    <view class="comment-list">
+      <block wx:for="{{comments}}" wx:key="id">
+        <view class="comment-item">
+          <image class="avatar" src="{{item.avatar_url}}" />
+          <view class="comment-content">
+            <text class="nickname">{{item.nickname}}</text>
+            <text class="content">{{item.reply_to_user_id ? ('@' + item.reply_to_nickname + ' ') : ''}}{{item.content}}</text>
+            <text class="time">{{item.created_at}}</text>
+            <view class="comment-actions">
+              <button size="mini" bindtap="onReplyComment" data-id="{{item.id}}" data-nickname="{{item.nickname}}" data-userid="{{item.user_id}}">回复</button>
+              <button size="mini" wx:if="userInfo && userInfo.id === item.user_id" bindtap="onDeleteComment" data-id="{{item.id}}">删除</button>
+            </view>
+          </view>
+          <!-- 子评论 -->
+          <view class="replies" wx:if="item.replies && item.replies.length">
+            <block wx:for="{{item.replies}}" wx:key="id">
+              <view class="reply-item">
+                <image class="avatar" src="{{item.avatar_url}}" />
+                <view class="comment-content">
+                  <text class="nickname">{{item.nickname}}</text>
+                  <text class="content">{{item.reply_to_user_id ? ('@' + item.reply_to_nickname + ' ') : ''}}{{item.content}}</text>
+                  <text class="time">{{item.created_at}}</text>
+                  <view class="comment-actions">
+                    <button size="mini" bindtap="onReplyComment" data-id="{{item.id}}" data-nickname="{{item.nickname}}" data-userid="{{item.user_id}}">回复</button>
+                    <button size="mini" wx:if="userInfo && userInfo.id === item.user_id" bindtap="onDeleteComment" data-id="{{item.id}}">删除</button>
+                  </view>
+                </view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </block>
+      <view wx:if="{{comments.length === 0}}" class="empty">暂无评论</view>
+    </view>
+    <view class="comment-input-bar">
+      <input placeholder="{{replyPlaceholder}}" value="{{commentInput}}" bindinput="onCommentInput" />
+      <button bindtap="submitComment">发送</button>
+      <button wx:if="replying" size="mini" bindtap="cancelReply">取消回复</button>
+    </view>
+  </view>
   <!-- 评论区可后续扩展 -->
 </view>

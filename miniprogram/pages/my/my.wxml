@@ -1,11 +1,11 @@
 <view class="my-container">
   <view class="user-info">
-    <image class="avatar" src="{{userInfo.avatar}}" mode="aspectFill" />
-    <view class="nickname">{{userInfo.nickname}}</view>
+    <image class="avatar" src="{{userInfo.avatar}}" />
+    <text class="nickname">{{userInfo.nickname}}</text>
   </view>
   <view class="my-list">
-    <view class="my-item" bindtap="goToMyActivities">我的活动</view>
-    <view class="my-item" bindtap="goToMyFavorites">我的收藏</view>
+    <view class="my-item" bindtap="openMyActivitiesModal">我的活动</view>
+    <view class="my-item" bindtap="openMyFavoritesModal">我的收藏</view>
     <view class="my-item">设置</view>
   </view>
   <view class="favorite-list">
@@ -15,4 +15,41 @@
   </view>
 </view>
   <button class="login-btn" wx:if="{{!isLogin}}" open-type="getUserInfo" bindtap="onLogin">微信一键登录</button>
+
+<!-- 我的活动模态框 -->
+<view class="modal-mask" wx:if="{{showMyActivitiesModal}}" bindtap="closeMyActivitiesModal"></view>
+<view class="modal-content" wx:if="{{showMyActivitiesModal}}">
+  <view class="modal-header">
+    <text>我的活动</text>
+    <button class="close-btn" bindtap="closeMyActivitiesModal">关闭</button>
+  </view>
+  <scroll-view scroll-y style="max-height:60vh;">
+    <block wx:for="{{myActivities}}" wx:key="id">
+      <view class="activity-item">
+        <text>{{item.name}}</text>
+        <button bindtap="goToEditFromModal" data-id="{{item.id}}">编辑</button>
+        <button bindtap="deleteActivityFromModal" data-id="{{item.id}}">删除</button>
+      </view>
+    </block>
+    <view wx:if="{{myActivities.length === 0}}" class="empty">暂无活动</view>
+  </scroll-view>
+</view>
+<!-- 我的收藏模态框 -->
+<view class="modal-mask" wx:if="{{showMyFavoritesModal}}" bindtap="closeMyFavoritesModal"></view>
+<view class="modal-content" wx:if="{{showMyFavoritesModal}}">
+  <view class="modal-header">
+    <text>我的收藏</text>
+    <button class="close-btn" bindtap="closeMyFavoritesModal">关闭</button>
+  </view>
+  <scroll-view scroll-y style="max-height:60vh;">
+    <block wx:for="{{myFavorites}}" wx:key="id">
+      <view class="activity-item">
+        <text>{{item.name}}</text>
+        <button bindtap="goToDetailFromFavorites" data-id="{{item.id}}">详情</button>
+        <button bindtap="removeFavoriteFromModal" data-id="{{item.id}}">移除</button>
+      </view>
+    </block>
+    <view wx:if="{{myFavorites.length === 0}}" class="empty">暂无收藏</view>
+  </scroll-view>
+</view>
 </view>

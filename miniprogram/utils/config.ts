@@ -1,5 +1,5 @@
 // 配置文件
-export const API_BASE_URL = 'http://172.16.17.253:3000/api';
+export const API_BASE_URL = 'http://192.168.43.222:3000/api';
 
 // 其他配置项
 export const CONFIG = {
