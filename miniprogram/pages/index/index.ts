@@ -11,7 +11,9 @@ Page({
     ratingRange: [0, 5],
     favoriteVenues: [] as number[],
     loading: false,
-    userId: null as number | null
+    userId: null as number | null,
+    leftColumnVenues: [] as any[],
+    rightColumnVenues: [] as any[],
   },
 
   // 检查是否收藏
@@ -66,24 +68,28 @@ Page({
   // 价格筛选
   openPriceFilter() {
     wx.showActionSheet({
-      itemList: ['0 - 100', '100 - 200', '200 - 500', '500以上'],
+      itemList: ['全部', '0 - 100', '100 - 200', '200 - 500', '500以上'],
       success: (res) => {
         let min = 0;
         let max = 1000;
         switch (res.tapIndex) {
           case 0:
             min = 0;
-            max = 100;
+            max = 1000;
             break;
           case 1:
+            min = 0;
+            max = 100;
+            break;
+          case 2:
             min = 100;
             max = 200;
             break;
-          case 2:
+          case 3:
             min = 200;
             max = 500;
             break;
-          case 3:
+          case 4:
             min = 500;
             max = 1000;
             break;
@@ -99,24 +105,28 @@ Page({
   // 评分筛选
   openRatingFilter() {
     wx.showActionSheet({
-      itemList: ['0 - 2分', '2 - 3分', '3 - 4分', '4 - 5分'],
+      itemList: ['全部', '0 - 2分', '2 - 3分', '3 - 4分', '4 - 5分'],
       success: (res) => {
         let min = 0;
         let max = 5;
         switch (res.tapIndex) {
           case 0:
             min = 0;
-            max = 2;
+            max = 5;
             break;
           case 1:
+            min = 0;
+            max = 2;
+            break;
+          case 2:
             min = 2;
             max = 3;
             break;
-          case 2:
+          case 3:
             min = 3;
             max = 4;
             break;
-          case 3:
+          case 4:
             min = 4;
             max = 5;
             break;
@@ -126,6 +136,25 @@ Page({
         });
         this.fetchVenues();
       }
+    });
+  },
+
+  // 将活动数据分成左右两列
+  splitVenuesIntoColumns(venues: any[]) {
+    const leftColumn: any[] = [];
+    const rightColumn: any[] = [];
+    
+    venues.forEach((venue, index) => {
+      if (index % 2 === 0) {
+        leftColumn.push(venue);
+      } else {
+        rightColumn.push(venue);
+      }
+    });
+    
+    this.setData({
+      leftColumnVenues: leftColumn,
+      rightColumnVenues: rightColumn
     });
   },
 
@@ -177,6 +206,9 @@ Page({
           venues: venues,
           filteredVenues: venues
         });
+        
+        // 将活动分成左右两列
+        this.splitVenuesIntoColumns(venues);
       }
     } catch (error) {
       console.error('获取场馆数据失败:', error);

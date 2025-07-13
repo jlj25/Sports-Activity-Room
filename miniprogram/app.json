@@ -3,7 +3,7 @@
     "pages/index/index",  
     "pages/detail/detail",
     "pages/publish/publish",
-    "pages/my/my"  
+    "pages/my/my"
   ],
   "window": {
     "navigationBarTitleText": "跃动空间",

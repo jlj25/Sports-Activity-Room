@@ -129,8 +129,6 @@ Page({
   onGetUserInfo(e: any) {
     wx.showToast({ title: '请点击上方“登录”按钮', icon: 'none' });
   },
-  // 跳转到我的活动页面
-  // 跳转到我的收藏页面
   openMyActivitiesModal() {
     const userInfo = wx.getStorageSync('userInfo');
     if (!userInfo || !userInfo.id) {
