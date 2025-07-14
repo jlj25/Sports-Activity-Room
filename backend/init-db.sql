@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS favorites (
   UNIQUE KEY unique_favorite (user_id, venue_id)
 );
 
--- 创建预约表
+-- 创建报名表
 CREATE TABLE IF NOT EXISTS bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,

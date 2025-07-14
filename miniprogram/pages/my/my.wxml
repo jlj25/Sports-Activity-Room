@@ -14,7 +14,7 @@
     <button bindtap="removeFavorite" data-id="{{item}}">移除</button>
   </view>
 </view>
-  <button class="login-btn" wx:if="{{!isLogin}}" open-type="getUserInfo" bindtap="onLogin">微信一键登录</button>
+  <button class="login-btn" wx:if="{{!isLogin}}" bindtap="onLogin">微信一键登录</button>
 
 <!-- 我的活动模态框 -->
 <view class="modal-mask" wx:if="{{showMyActivitiesModal}}" bindtap="closeMyActivitiesModal"></view>
@@ -45,7 +45,6 @@
     <block wx:for="{{myFavorites}}" wx:key="id">
       <view class="activity-item">
         <text>{{item.name}}</text>
-        <button bindtap="goToDetailFromFavorites" data-id="{{item.id}}">详情</button>
         <button bindtap="removeFavoriteFromModal" data-id="{{item.id}}">移除</button>
       </view>
     </block>

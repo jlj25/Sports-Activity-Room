@@ -74,20 +74,19 @@ Page({
   },
   //登录
   onLogin() {
-    wx.login({
-      success: (res) => {
-        if (res.code) {
-          wx.getUserProfile({
-            desc: '用于完善会员资料',
-            success: (userRes) => {
-              const { nickName, avatarUrl } = userRes.userInfo;
+    wx.getUserProfile({
+      desc: '用于完善会员资料',
+      success: (userRes) => {
+        wx.login({
+          success: (res) => {
+            if (res.code) {
               wx.request({
                 url: 'http://192.168.43.222:3000/api/login',
                 method: 'POST',
                 data: {
                   code: res.code,
-                  nickname: nickName,
-                  avatarUrl: avatarUrl
+                  nickname: userRes.userInfo.nickName,
+                  avatarUrl: userRes.userInfo.avatarUrl
                 },
                 success: (loginRes: any) => {
                   if (loginRes.statusCode === 200 && loginRes.data && loginRes.data.user) {
@@ -117,12 +116,13 @@ Page({
                   wx.showToast({ title: '网络错误', icon: 'none' });
                 }
               });
-            },
-            fail: () => {
-              wx.showToast({ title: '获取微信信息失败', icon: 'none' });
             }
-          });
-        }
+          }
+        });
+      },
+      fail: (err) => {
+        console.log('getUserProfile fail', err);
+        wx.showToast({ title: '获取微信信息失败', icon: 'none' });
       }
     });
   },
@@ -202,10 +202,6 @@ Page({
   },
   closeMyFavoritesModal() {
     this.setData({ showMyFavoritesModal: false });
-  },
-  goToDetailFromFavorites(e: any) {
-    const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/detail/detail?id=${id}` });
   },
   removeFavoriteFromModal(e: any) {
     const id = e.currentTarget.dataset.id;

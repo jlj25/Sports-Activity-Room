@@ -14,6 +14,15 @@ Page({
     userId: null as number | null,
     leftColumnVenues: [] as any[],
     rightColumnVenues: [] as any[],
+    currentView: 'list',
+    selectedVenue: {} as any,
+    comments: [] as any[],
+    commentInput: '',
+    replying: false,
+    replyToCommentId: null as number | null,
+    replyToUserId: null as number | null,
+    replyToNickname: '',
+    replyPlaceholder: '说点什么...'
   },
 
   // 检查是否收藏
@@ -273,14 +282,7 @@ Page({
     });
   },
 
-  // 活动室卡片点击
-  navigateToDetail(e: any) {
-    wx.navigateTo({
-      url: `/pages/detail/detail?id=${e.currentTarget.dataset.id}`
-    });
-  },
-
-  // 立即预约按钮
+  // 立即报名按钮
   onReserve(e: any) {
     if (!this.data.userId) {
       wx.showToast({ 
@@ -300,6 +302,126 @@ Page({
   onPullDownRefresh() {
     this.fetchVenues().then(() => {
       wx.stopPullDownRefresh();
+    });
+  },
+
+  // 切换到详情
+  showVenueDetail(e: any) {
+    const id = e.currentTarget.dataset.id;
+    this.fetchVenueDetail(id);
+    this.fetchComments(id);
+    this.setData({ currentView: 'detail' });
+  },
+  // 返回列表
+  backToList() {
+    this.setData({ currentView: 'list', selectedVenue: {}, comments: [] });
+  },
+  // 获取详情
+  fetchVenueDetail(id: number) {
+    wx.request({
+      url: `${API_BASE_URL}/venues/${id}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.statusCode === 200) {
+          const venue = res.data as any;
+          if (typeof venue.sports === 'string') venue.sports = JSON.parse(venue.sports);
+          let cover = venue.cover;
+          if (cover && !/^https?:\/\//.test(cover) && cover) {
+            cover = '../../images/' + cover;
+          }
+          venue.cover = cover;
+          this.setData({ selectedVenue: venue });
+        }
+      }
+    });
+  },
+  // 评论相关逻辑
+  onCommentInput(e: any) {
+    this.setData({ commentInput: e.detail.value });
+  },
+  submitComment() {
+    const userInfo = wx.getStorageSync('userInfo');
+    if (!userInfo || !userInfo.id) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    if (!this.data.commentInput.trim()) {
+      wx.showToast({ title: '请输入内容', icon: 'none' });
+      return;
+    }
+    const venue = this.data.selectedVenue as any;
+    wx.request({
+      url: `${API_BASE_URL}/comments`,
+      method: 'POST',
+      data: {
+        venue_id: venue.id,
+        user_id: userInfo.id,
+        content: this.data.commentInput,
+        parent_id: this.data.replyToCommentId,
+        reply_to_user_id: this.data.replyToUserId
+      },
+      success: () => {
+        wx.showToast({ title: '评论成功' });
+        this.setData({ commentInput: '', replying: false, replyToCommentId: null, replyToUserId: null, replyToNickname: '', replyPlaceholder: '说点什么...' });
+        this.fetchComments(venue.id);
+      }
+    });
+  },
+  onReplyComment(e: any) {
+    const { id, nickname, userid } = e.currentTarget.dataset;
+    this.setData({
+      replying: true,
+      replyToCommentId: id,
+      replyToUserId: userid,
+      replyToNickname: nickname,
+      replyPlaceholder: `回复 @${nickname}：`
+    });
+  },
+  cancelReply() {
+    this.setData({ replying: false, replyToCommentId: null, replyToUserId: null, replyToNickname: '', replyPlaceholder: '说点什么...' });
+  },
+  onDeleteComment(e: any) {
+    const id = e.currentTarget.dataset.id;
+    const venue = this.data.selectedVenue as any;
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除该评论吗？',
+      success: (res) => {
+        if (res.confirm) {
+          wx.request({
+            url: `${API_BASE_URL}/comments/${id}`,
+            method: 'DELETE',
+            success: (delRes) => {
+              if (delRes.statusCode === 200) {
+                wx.showToast({ title: '删除成功' });
+                this.fetchComments(venue.id);
+              } else {
+                wx.showToast({ title: '删除失败', icon: 'none' });
+              }
+            }
+          });
+        }
+      }
+    });
+  },
+  fetchComments(venueId: number) {
+    wx.request({
+      url: `${API_BASE_URL}/comments/${venueId}`,
+      method: 'GET',
+      success: (res) => {
+        const data = res.data as any[];
+        // 处理@昵称
+        const fillReplyNickname = (list: any[]) => {
+          list.forEach(c => {
+            if (c.reply_to_user_id && c.reply_to_user_id !== c.user_id) {
+              c.reply_to_nickname = c.reply_to_nickname || (c.replies && c.replies.length && c.replies[0].nickname) || '';
+            }
+            if (c.replies && c.replies.length) fillReplyNickname(c.replies);
+          });
+        };
+        fillReplyNickname(data || []);
+        this.setData({ comments: data || [] });
+      }
     });
   }
 });

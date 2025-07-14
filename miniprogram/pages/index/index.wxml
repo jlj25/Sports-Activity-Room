@@ -1,27 +1,27 @@
 <!--index.wxml-->
 
 <!-- 在顶部添加搜索框 -->
-<view class="search-bar">
+<view class="search-bar" wx:if="{{currentView === 'list'}}">
   <input class="search-input" type="text" placeholder="搜索活动场馆" bindinput="onSearchInput" />
   <button class="search-btn" bindtap="onSearch">搜索</button>
 </view>
 
 <!-- 顶部分类标签 -->
-<scroll-view class="category-tabs" scroll-x>
+<scroll-view class="category-tabs" scroll-x wx:if="{{currentView === 'list'}}">
   <view class="tab {{activeCategory == index ? 'active' : ''}}" wx:for="{{categories}}" wx:key="index" data-idx="{{index}}" bindtap="onCategoryTap">{{item}}</view>
 </scroll-view>
 
 <!-- 修改筛选栏 -->
-<view class="filter-bar">
+<view class="filter-bar" wx:if="{{currentView === 'list'}}">
   <view class="filter-item" bindtap="openPriceFilter">价格筛选 ▼</view>
   <view class="filter-item" bindtap="openRatingFilter">评分筛选 ▼</view>
 </view>
 
 <!-- 瀑布流布局的活动列表 -->
-<view class="masonry-container">
+<view class="masonry-container" wx:if="{{currentView === 'list'}}">
   <view class="masonry-column">
     <block wx:for="{{leftColumnVenues}}" wx:key="id">
-      <view class="venue-card" bindtap="navigateToDetail" data-id="{{item.id}}">
+      <view class="venue-card" bindtap="showVenueDetail" data-id="{{item.id}}">
         <image src="../../images/{{item.cover}}" class="venue-img" mode="aspectFill" />
         <view class="venue-badge">{{item.category}}</view>
         <view class="venue-info">
@@ -39,7 +39,7 @@
             <text class="unit">/小时起</text>
           </view>
           <view class="button-group">
-            <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即预约</button>
+            <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即报名</button>
             <button class="favorite-btn" bindtap="toggleFavorite" data-id="{{item.id}}">
               {{isFavorite(item.id) ? '已收藏' : '收藏'}}
             </button>
@@ -51,7 +51,7 @@
   
   <view class="masonry-column">
     <block wx:for="{{rightColumnVenues}}" wx:key="id">
-      <view class="venue-card" bindtap="navigateToDetail" data-id="{{item.id}}">
+      <view class="venue-card" bindtap="showVenueDetail" data-id="{{item.id}}">
         <image src="../../images/{{item.cover}}" class="venue-img" mode="aspectFill" />
         <view class="venue-badge">{{item.category}}</view>
         <view class="venue-info">
@@ -69,7 +69,7 @@
             <text class="unit">/小时起</text>
           </view>
           <view class="button-group">
-            <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即预约</button>
+            <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即报名</button>
             <button class="favorite-btn" bindtap="toggleFavorite" data-id="{{item.id}}">
               {{isFavorite(item.id) ? '已收藏' : '收藏'}}
             </button>
@@ -77,5 +77,74 @@
         </view>
       </view>
     </block>
+  </view>
+</view>
+
+<!-- 详情UI -->
+<view class="detail-container" wx:if="{{currentView === 'detail'}}">
+  <view class="back-btn" bindtap="backToList">←</view>
+  <view style="height:20rpx"></view>
+  <image class="detail-img" src="{{selectedVenue.cover}}" 
+  mode="aspectFill" />
+  <view class="detail-card">
+    <view class="detail-badge">{{selectedVenue.category}}</view>
+    <view class="detail-title">{{selectedVenue.name}}</view>
+    <view class="detail-rating">
+      <text class="star">★★★★★</text>
+      <text class="score">{{selectedVenue.rating}}</text>
+    </view>
+    <view class="detail-location">地址：{{selectedVenue.location}}</view>
+    <view class="detail-time">时间：{{selectedVenue.business_hours}}</view>
+    <view class="detail-tags">
+      <text wx:for="{{selectedVenue.sports}}" wx:key="index" class="tag">{{item}}</text>
+    </view>
+    <view class="detail-price">￥{{selectedVenue.price}} <text class="unit">/小时起</text></view>
+    <view class="detail-desc">
+      <text>活动介绍：</text>
+      <text>{{selectedVenue.description}}</text>
+    </view>
+  </view>
+  <button class="detail-reserve-btn">立即报名</button>
+  <button class="detail-delete-btn" bindtap="deleteVenue">删除该活动</button>
+  <!-- 评论区 -->
+  <view class="comment-section">
+    <view class="comment-list">
+      <block wx:for="{{comments}}" wx:key="id">
+        <view class="comment-item">
+          <image class="avatar" src="{{item.avatar_url}}" />
+          <view class="comment-content">
+            <text class="nickname">{{item.nickname}}</text>
+            <text class="content">{{item.reply_to_user_id ? ('@' + item.reply_to_nickname + ' ') : ''}}{{item.content}}</text>
+            <text class="time">{{item.created_at}}</text>
+            <view class="comment-actions">
+              <button size="mini" bindtap="onReplyComment" data-id="{{item.id}}" data-nickname="{{item.nickname}}" data-userid="{{item.user_id}}">回复</button>
+              <button size="mini" wx:if="userInfo && userInfo.id === item.user_id" bindtap="onDeleteComment" data-id="{{item.id}}">删除</button>
+            </view>
+          </view>
+          <!-- 子评论 -->
+          <view class="replies" wx:if="item.replies && item.replies.length">
+            <block wx:for="{{item.replies}}" wx:key="id">
+              <view class="reply-item">
+                <image class="avatar" src="{{item.avatar_url}}" />
+                <view class="comment-content">
+                  <text class="nickname">{{item.nickname}}</text>
+                  <text class="content">{{item.reply_to_user_id ? ('@' + item.reply_to_nickname + ' ') : ''}}{{item.content}}</text>
+                  <text class="time">{{item.created_at}}</text>
+                  <view class="comment-actions">
+                    <button size="mini" bindtap="onReplyComment" data-id="{{item.id}}" data-nickname="{{item.nickname}}" data-userid="{{item.user_id}}">回复</button>
+                    <button size="mini" wx:if="userInfo && userInfo.id === item.user_id" bindtap="onDeleteComment" data-id="{{item.id}}">删除</button>
+                  </view>
+                </view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </block>
+      <view wx:if="{{comments.length === 0}}" class="empty">暂无评论</view>
+    </view>
+    <view class="comment-input-bar">
+      <input placeholder="{{replyPlaceholder}}" value="{{commentInput}}" bindinput="onCommentInput" />
+      <button bindtap="submitComment">发送</button>
+    </view>
   </view>
 </view>
