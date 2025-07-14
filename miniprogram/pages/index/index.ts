@@ -30,7 +30,7 @@ Page({
     return this.data.favoriteVenues.includes(id);
   },
 
-  // 切换收藏状态
+  // 切换收藏状态（首页卡片）
   async toggleFavorite(e: any) {
     if (!this.data.userId) {
       wx.showToast({
@@ -42,11 +42,23 @@ Page({
     const venueId = e.currentTarget.dataset.id;
     let favoriteVenues = this.data.favoriteVenues;
     const isFav = favoriteVenues.includes(venueId);
+    // 立即切换UI和本地缓存
+    let newFavorites;
+    if (isFav) {
+      newFavorites = favoriteVenues.filter((id: number) => id !== venueId);
+    } else {
+      newFavorites = [...favoriteVenues, venueId];
+    }
+    console.log('收藏前:', favoriteVenues, '收藏后:', newFavorites, '当前id:', venueId, 'isFav:', isFav);
+    this.setData({ favoriteVenues: newFavorites });
+    wx.setStorageSync('favoriteVenues', newFavorites);
+    this.splitVenuesIntoColumns(this.data.venues);
+    // 请求后端
     try {
       const res: any = await new Promise((resolve, reject) => {
         wx.request({
           url: `${API_BASE_URL}/favorites`,
-          method: isFav ? 'DELETE' : 'POST',
+          method: 'POST',
           data: {
             userId: this.data.userId,
             venueId: venueId
@@ -56,22 +68,65 @@ Page({
         });
       });
       if (res.statusCode === 200) {
-        if (isFav) {
-          // 取消收藏
-          favoriteVenues = favoriteVenues.filter((id: number) => id !== venueId);
-          wx.showToast({ title: '已取消收藏', icon: 'none' });
-        } else {
-          // 添加收藏
-          favoriteVenues = [...favoriteVenues, venueId];
-          wx.showToast({ title: '已收藏', icon: 'success' });
-        }
-        this.setData({ favoriteVenues });
+        wx.showToast({ title: isFav ? '已取消收藏' : '已收藏', icon: isFav ? 'none' : 'success' });
       } else {
+        // 回滚
+        this.setData({ favoriteVenues: favoriteVenues });
+        wx.setStorageSync('favoriteVenues', favoriteVenues);
         wx.showToast({ title: '操作失败', icon: 'none' });
       }
     } catch (err) {
+      // 回滚
+      this.setData({ favoriteVenues: favoriteVenues });
+      wx.setStorageSync('favoriteVenues', favoriteVenues);
       wx.showToast({ title: '网络错误', icon: 'none' });
     }
+  },
+
+  // 详情页收藏按钮
+  toggleFavoriteDetail() {
+    if (!this.data.userId) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    const venueId = this.data.selectedVenue.id;
+    let favoriteVenues = this.data.favoriteVenues;
+    const isFav = favoriteVenues.includes(venueId);
+    // 立即切换UI和本地缓存
+    let newFavorites;
+    if (isFav) {
+      newFavorites = favoriteVenues.filter((id: number) => id !== venueId);
+    } else {
+      newFavorites = [...favoriteVenues, venueId];
+    }
+    this.setData({ favoriteVenues: newFavorites });
+    wx.setStorageSync('favoriteVenues', newFavorites);
+    this.splitVenuesIntoColumns(this.data.venues);
+    // 请求后端
+    wx.request({
+      url: `${API_BASE_URL}/favorites`,
+      method: 'POST',
+      data: {
+        userId: this.data.userId,
+        venueId: venueId
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          wx.showToast({ title: isFav ? '已取消收藏' : '已收藏', icon: isFav ? 'none' : 'success' });
+        } else {
+          // 回滚
+          this.setData({ favoriteVenues: favoriteVenues });
+          wx.setStorageSync('favoriteVenues', favoriteVenues);
+          wx.showToast({ title: '操作失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        // 回滚
+        this.setData({ favoriteVenues: favoriteVenues });
+        wx.setStorageSync('favoriteVenues', favoriteVenues);
+        wx.showToast({ title: '网络错误', icon: 'none' });
+      }
+    });
   },
   
   // 价格筛选
@@ -244,8 +299,22 @@ Page({
 
   // 页面加载
   onLoad() {
-    // 移除 mockLogin 相关内容，首页只依赖真实登录
     this.fetchVenues();
+    // 同步userId
+    const userInfo = wx.getStorageSync('userInfo');
+    this.setData({
+      userId: userInfo && userInfo.id ? userInfo.id : null
+    });
+  },
+
+  // 页面显示时同步本地收藏和userId
+  onShow() {
+    const favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
+    const userInfo = wx.getStorageSync('userInfo');
+    this.setData({
+      favoriteVenues,
+      userId: userInfo && userInfo.id ? userInfo.id : null
+    });
   },
 
   // 获取用户收藏

@@ -1,35 +1,48 @@
-<view class="publish-container">
-  <view class="title">发布新活动</view>
-  <view class="form-item">
-    <text>活动名称</text>
-    <input placeholder="请输入活动名称" bindinput="onNameInput" />
+<view class="publish-xhs-container">
+  <view class="xhs-cover-card">
+    <view class="xhs-cover-upload" bindtap="chooseImage">
+      <image wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" class="xhs-cover-img" />
+      <view wx:else class="xhs-cover-placeholder">
+        <text class="xhs-plus">+</text>
+        <text class="xhs-cover-tip">上传封面</text>
+      </view>
+    </view>
   </view>
-  <view class="form-item">
-    <text>活动类型</text>
-    <picker range="{{categories}}" bindchange="onCategoryChange">
-      <view>{{categories[categoryIndex]}}</view>
-    </picker>
+  <view class="xhs-form-card">
+    <view class="xhs-form-item">
+      <input class="xhs-input" placeholder="活动名称（必填）" bindinput="onNameInput" value="{{name}}" />
+    </view>
+    <view class="xhs-form-item">
+      <picker range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategoryChange">
+        <view class="xhs-picker">{{categories[categoryIndex] || '选择类型'}}</view>
+      </picker>
+    </view>
+    <view class="xhs-form-item">
+      <picker mode="date" value="{{date}}" bindchange="onDateChange">
+        <view class="xhs-picker">{{date ? date : '选择活动日期'}}</view>
+      </picker>
+    </view>
+    <view class="xhs-form-item xhs-time-row">
+      <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
+        <view class="xhs-picker">{{startTime ? startTime : '开始时间'}}</view>
+      </picker>
+      <text style="margin:0 16rpx;">~</text>
+      <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
+        <view class="xhs-picker">{{endTime ? endTime : '结束时间'}}</view>
+      </picker>
+    </view>
+    <view class="xhs-form-item">
+      <text class="xhs-time-preview">{{date && startTime && endTime ? (date + ' ' + startTime + ' ~ ' + endTime) : ''}}</text>
+    </view>
+    <view class="xhs-form-item">
+      <input class="xhs-input" placeholder="活动地点" bindinput="onLocationInput" value="{{location}}" />
+    </view>
+    <view class="xhs-form-item">
+      <input class="xhs-input" type="digit" placeholder="价格(元/小时)" bindinput="onPriceInput" value="{{price}}" />
+    </view>
+    <view class="xhs-form-item">
+      <textarea class="xhs-textarea" placeholder="活动描述（可选，推荐详细填写吸引更多人）" bindinput="onDescInput" value="{{description}}" />
+    </view>
   </view>
-  <view class="form-item">
-    <text>活动时间</text>
-    <input placeholder="请输入时间，如 2025-07-10 18:00" bindinput="onTimeInput" />
-  </view>
-  <view class="form-item">
-    <text>活动地点</text>
-    <input placeholder="请输入地点" bindinput="onLocationInput" />
-  </view>
-  <view class="form-item">
-    <text>价格(元/小时)</text>
-    <input type="digit" placeholder="请输入价格" bindinput="onPriceInput" />
-  </view>
-  <view class="form-item">
-    <text>活动封面</text>
-    <button bindtap="chooseImage">选择图片</button>
-    <image wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" style="width:120px;height:80px;margin-top:8px;" />
-  </view>
-  <view class="form-item">
-    <text>活动描述</text>
-    <textarea placeholder="请输入活动描述" bindinput="onDescInput" />
-  </view>
-  <button class="submit-btn" bindtap="onSubmit">发布</button>
+  <button class="xhs-submit-btn" bindtap="onSubmit">发布</button>
 </view>

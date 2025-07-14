@@ -40,7 +40,7 @@
           </view>
           <view class="button-group">
             <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即报名</button>
-            <button class="favorite-btn" bindtap="toggleFavorite" data-id="{{item.id}}">
+            <button class="favorite-btn {{isFavorite(item.id) ? 'favorite-btn-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">
               {{isFavorite(item.id) ? '已收藏' : '收藏'}}
             </button>
           </view>
@@ -70,7 +70,7 @@
           </view>
           <view class="button-group">
             <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即报名</button>
-            <button class="favorite-btn" bindtap="toggleFavorite" data-id="{{item.id}}">
+            <button class="favorite-btn {{isFavorite(item.id) ? 'favorite-btn-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">
               {{isFavorite(item.id) ? '已收藏' : '收藏'}}
             </button>
           </view>
@@ -105,6 +105,9 @@
     </view>
   </view>
   <button class="detail-reserve-btn">立即报名</button>
+  <button class="detail-favorite-btn" bindtap="toggleFavoriteDetail">
+    {{favoriteVenues && selectedVenue.id && favoriteVenues.includes(selectedVenue.id) ? '已收藏' : '收藏'}}
+  </button>
   <button class="detail-delete-btn" bindtap="deleteVenue">删除该活动</button>
   <!-- 评论区 -->
   <view class="comment-section">

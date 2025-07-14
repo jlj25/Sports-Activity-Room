@@ -40,12 +40,14 @@ Page({
     }
   },
   onShow() {
-    // 每次页面显示都同步本地userInfo，保证登录状态
+    // 每次页面显示都同步本地userInfo和收藏，保证登录和收藏状态
     const userInfo = wx.getStorageSync('userInfo');
+    const favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
     if (userInfo && userInfo.id) {
       this.setData({
         userInfo,
-        isLogin: true
+        isLogin: true,
+        favoriteVenues
       });
     } else {
       this.setData({
@@ -55,7 +57,8 @@ Page({
           openid: '',
           id: null
         },
-        isLogin: false
+        isLogin: false,
+        favoriteVenues
       });
     }
   },
@@ -185,6 +188,7 @@ Page({
   },
   openMyFavoritesModal() {
     const userInfo = wx.getStorageSync('userInfo');
+    const favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
     if (!userInfo || !userInfo.id) {
       wx.showToast({ title: '请先登录', icon: 'none' });
       return;
@@ -195,7 +199,8 @@ Page({
       success: (res) => {
         this.setData({
           myFavorites: Array.isArray(res.data) ? res.data : [],
-          showMyFavoritesModal: true
+          showMyFavoritesModal: true,
+          favoriteVenues // 保证同步
         });
       }
     });
@@ -218,6 +223,11 @@ Page({
         }
         if (res.statusCode === 200 && typeof data === 'object' && data !== null && 'isFavorite' in data && data.isFavorite === false) {
           wx.showToast({ title: '已移除收藏', icon: 'none' });
+          // 刷新本地缓存
+          let favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
+          favoriteVenues = favoriteVenues.filter((fid: number) => fid !== id);
+          wx.setStorageSync('favoriteVenues', favoriteVenues);
+          this.setData({ favoriteVenues });
           this.openMyFavoritesModal();
         }
       }

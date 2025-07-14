@@ -156,6 +156,12 @@ page {
   min-width: 0;
 }
 
+.favorite-btn-active {
+  background: #ffd700 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
 .button-group {
   display: flex;
   gap: 8px;
@@ -391,6 +397,25 @@ page {
   border-radius: 32rpx;
   font-size: 28rpx;
   padding: 20rpx 0;
+}
+
+.detail-favorite-btn {
+  width: 80vw;
+  margin: 16rpx auto 0 auto;
+  display: block;
+  background: #fff0f0;
+  color: #ff4757;
+  border: 2rpx solid #ff4757;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  padding: 20rpx 0;
+  box-shadow: 0 2px 8px rgba(255,71,87,0.06);
+}
+.detail-favorite-btn[disabled], .detail-favorite-btn[aria-disabled="true"] {
+  background: #f7f7f7;
+  color: #bbb;
+  border-color: #eee;
 }
 
 .comment-section {

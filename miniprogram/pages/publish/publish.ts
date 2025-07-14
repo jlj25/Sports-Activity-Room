@@ -3,7 +3,9 @@ Page({
     categories: ['足球', '篮球', '乒乓球', '羽毛球', '排球'],
     categoryIndex: 0,
     name: '',
-    time: '',
+    date: '',
+    startTime: '',
+    endTime: '',
     location: '',
     price: '',
     cover: '',
@@ -16,8 +18,14 @@ Page({
   onNameInput(e: any) {
     this.setData({ name: e.detail.value });
   },
-  onTimeInput(e: any) {
-    this.setData({ time: e.detail.value });
+  onDateChange(e: any) {
+    this.setData({ date: e.detail.value });
+  },
+  onStartTimeChange(e: any) {
+    this.setData({ startTime: e.detail.value });
+  },
+  onEndTimeChange(e: any) {
+    this.setData({ endTime: e.detail.value });
   },
   onLocationInput(e: any) {
     this.setData({ location: e.detail.value });
@@ -74,10 +82,22 @@ Page({
           wx.hideLoading();
           if (res.statusCode === 200 && res.data) {
             const data = res.data as any;
+            let date = '', startTime = '', endTime = '';
+            if (data.business_hours) {
+              // 兼容格式：2024-07-10 18:00 ~ 20:00
+              const match = data.business_hours.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*~\s*(\d{2}:\d{2})/);
+              if (match) {
+                date = match[1]; startTime = match[2]; endTime = match[3];
+              } else {
+                date = data.business_hours.split(' ')[0];
+              }
+            }
             this.setData({
               name: data.name || '',
               categoryIndex: this.data.categories.indexOf(data.category),
-              time: data.business_hours || '',
+              date,
+              startTime,
+              endTime,
               location: data.location || '',
               price: data.price ? String(data.price) : '',
               cover: data.cover || '',
@@ -91,8 +111,8 @@ Page({
     }
   },
   async onSubmit() {
-    const { name, categories, categoryIndex, time, location, price, cover, description, editId } = this.data;
-    if (!name || !time || !location || !price) {
+    const { name, categories, categoryIndex, date, startTime, endTime, location, price, cover, description, editId } = this.data;
+    if (!name || !date || !startTime || !endTime || !location || !price) {
       wx.showToast({ title: '请填写完整信息', icon: 'none' });
       return;
     }
@@ -102,10 +122,11 @@ Page({
       return;
     }
     wx.showLoading({ title: editId ? '保存中...' : '发布中...' });
+    const business_hours = `${date} ${startTime} ~ ${endTime}`;
     const reqData = {
       name,
       category: categories[categoryIndex],
-      business_hours: time,
+      business_hours,
       location,
       price: parseFloat(price),
       rating: 0,
