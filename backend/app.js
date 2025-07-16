@@ -42,7 +42,7 @@ app.get('/api/venues', async (req, res) => {
   try {
     const { search, category, priceMin, priceMax, ratingMin, ratingMax } = req.query;
     
-    let sql = 'SELECT * FROM venues WHERE 1=1';
+    let sql = 'SELECT * FROM venues WHERE status = "approved"';
     const params = [];
     
     // 搜索功能
@@ -141,6 +141,52 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// 账号密码登录接口
+app.post('/api/account_login', async (req, res) => {
+  let { username, password } = req.body;
+  username = (username || '').trim();
+  password = (password || '').trim();
+  console.log('账号登录参数:', username, password);
+  if (!username || !password) return res.status(400).json({ message: '缺少账号或密码' });
+  try {
+    const [rows] = await pool.query('SELECT * FROM users WHERE TRIM(username) = ? AND TRIM(password) = ?', [username, password]);
+    if (rows.length === 0) {
+      return res.status(401).json({ message: '账号或密码错误' });
+    }
+    const user = rows[0];
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+
+// 账号注册接口
+app.post('/api/register', async (req, res) => {
+  let { username, password, nickname } = req.body;
+  username = (username || '').trim();
+  password = (password || '').trim();
+  nickname = (nickname || '').trim();
+  console.log('账号注册参数:', username, password, nickname);
+  if (!username || !password) return res.status(400).json({ message: '缺少账号或密码' });
+  try {
+    // 检查用户名是否已存在
+    const [rows] = await pool.query('SELECT * FROM users WHERE TRIM(username) = ?', [username]);
+    if (rows.length > 0) {
+      return res.status(409).json({ message: '用户名已存在' });
+    }
+    // 插入新用户，openid允许为NULL
+    const [result] = await pool.query(
+      'INSERT INTO users (username, password, nickname) VALUES (?, ?, ?)',
+      [username, password, nickname || username]
+    );
+    // 返回新用户信息
+    const user = { id: result.insertId, username, nickname: nickname || username };
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+
 // 5. 收藏/取消收藏场馆
 app.post('/api/favorites', async (req, res) => {
   try {
@@ -206,24 +252,25 @@ app.post('/api/venues', async (req, res) => {
 });
 
 // 8. 编辑活动（场馆）
-app.put('/api/venues/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, price, cover, business_hours, category, rating, location, sports, description, creator_id } = req.body;
-    if (!creator_id) return res.status(400).json({ message: '缺少creator_id' });
-    const [result] = await pool.query(
-      'UPDATE venues SET name=?, price=?, cover=?, business_hours=?, category=?, rating=?, location=?, sports=?, description=?, creator_id=? WHERE id=?',
-      [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description, creator_id, id]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: '活动不存在' });
-    }
-    res.json({ message: '活动更新成功' });
-  } catch (err) {
-    console.error('编辑活动失败：', err);
-    res.status(500).json({ message: '服务器错误' });
-  }
-});
+// 已废弃：请用其他路由编辑活动，避免与审核路由冲突
+// app.put('/api/venues/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { name, price, cover, business_hours, category, rating, location, sports, description, creator_id } = req.body;
+//     if (!creator_id) return res.status(400).json({ message: '缺少creator_id' });
+//     const [result] = await pool.query(
+//       'UPDATE venues SET name=?, price=?, cover=?, business_hours=?, category=?, rating=?, location=?, sports=?, description=?, creator_id=? WHERE id=?',
+//       [name, price, cover, business_hours, category, rating || 0, location, JSON.stringify(sports || []), description, creator_id, id]
+//     );
+//     if (result.affectedRows === 0) {
+//       return res.status(404).json({ message: '活动不存在' });
+//     }
+//     res.json({ message: '活动更新成功' });
+//   } catch (err) {
+//     console.error('编辑活动失败：', err);
+//     res.status(500).json({ message: '服务器错误' });
+//   }
+// });
 
 // 9. 删除活动（场馆）
 app.delete('/api/venues/:id', async (req, res) => {
@@ -304,6 +351,165 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 // 静态资源托管uploads目录
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 10. 用户报名（新增报名记录）
+app.post('/api/bookings', async (req, res) => {
+  try {
+    const { user_id, venue_id, date, start_time, end_time } = req.body;
+    if (!user_id || !venue_id || !date || !start_time || !end_time) {
+      return res.status(400).json({ message: '参数不全' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO bookings (user_id, venue_id, date, start_time, end_time, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [user_id, venue_id, date, start_time, end_time, 'pending']
+    );
+    res.json({ id: result.insertId, message: '报名成功' });
+  } catch (err) {
+    console.error('报名失败：', err);
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
+// 11. 获取用户所有报名记录
+app.get('/api/bookings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const [rows] = await pool.query(
+      `SELECT b.*, v.name as venue_name, v.cover as venue_cover, v.location as venue_location FROM bookings b
+       LEFT JOIN venues v ON b.venue_id = v.id
+       WHERE b.user_id = ? ORDER BY b.created_at DESC`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('获取报名记录失败：', err);
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
+// 12. 取消报名（更新报名状态）
+app.put('/api/bookings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ message: '缺少status' });
+    const [result] = await pool.query('UPDATE bookings SET status = ? WHERE id = ?', [status, id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '报名不存在' });
+    }
+    res.json({ message: '报名状态已更新' });
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
+// 获取所有报名（管理员）
+app.get('/api/all_bookings', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT b.*, v.name AS venue_name, u.nickname AS user_nickname
+      FROM bookings b
+      JOIN venues v ON b.venue_id = v.id
+      JOIN users u ON b.user_id = u.id
+      ORDER BY b.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+// 获取所有用户（管理员）
+app.get('/api/all_users', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, username, nickname, disabled FROM users');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+// 用户禁用/恢复/删除/更新信息（管理员或个人）
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { disabled, nickname, avatar_url } = req.body;
+  try {
+    // 动态拼接 SQL
+    const fields = [];
+    const values = [];
+    if (typeof disabled !== 'undefined') {
+      fields.push('disabled = ?');
+      values.push(!!disabled);
+    }
+    if (typeof nickname !== 'undefined') {
+      fields.push('nickname = ?');
+      values.push(nickname);
+    }
+    if (typeof avatar_url !== 'undefined') {
+      fields.push('avatar_url = ?');
+      values.push(avatar_url);
+    }
+    if (fields.length === 0) {
+      return res.status(400).json({ message: '无可更新字段' });
+    }
+    values.push(id);
+    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+    res.json({ message: '操作成功' });
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    res.json({ message: '删除成功' });
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+
+// 管理员获取所有待审核活动
+app.get('/api/pending_venues', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM venues WHERE status = "pending"');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+// 管理员审核/结束/删除活动
+app.put('/api/venues/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!['approved', 'rejected', 'ended'].includes(status)) {
+    return res.status(400).json({ message: '状态错误' });
+  }
+  await pool.query('UPDATE venues SET status = ? WHERE id = ?', [status, id]);
+  res.json({ message: '操作成功' });
+});
+
+// 获取某活动所有报名（带用户昵称）
+app.get('/api/activity_bookings/:venueId', async (req, res) => {
+  const { venueId } = req.params;
+  try {
+    const [rows] = await pool.query(
+      `SELECT b.*, u.nickname AS user_nickname FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.venue_id = ? ORDER BY b.created_at DESC`,
+      [venueId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
+
+// 管理员获取所有活动（含已结束/未审核等）
+app.get('/api/all_venues', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM venues ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: '服务器错误', detail: err.message });
+  }
+});
 
 // -------------- 启动服务器 --------------
 app.listen(port, '0.0.0.0', () => {  // 关键修改：监听 0.0.0.0

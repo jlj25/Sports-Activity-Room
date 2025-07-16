@@ -20,7 +20,7 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "活动广场",
+        "text": "活动",
         "iconPath": "images/tab_home.jpg",
         "selectedIconPath": "images/tab_home_active.jpg"
       },

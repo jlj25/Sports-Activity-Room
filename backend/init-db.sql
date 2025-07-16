@@ -5,9 +5,12 @@ USE sports_activity_room;
 -- 创建用户表
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  openid VARCHAR(100) UNIQUE NOT NULL,
+  openid VARCHAR(100) UNIQUE,
+  username VARCHAR(100) UNIQUE,
+  password VARCHAR(100),
   nickname VARCHAR(100),
   avatar_url TEXT,
+  disabled BOOLEAN DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -67,4 +70,8 @@ INSERT INTO venues (name, price, cover, business_hours, category, rating, locati
 -- 插入示例用户数据（用于测试）
 INSERT INTO users (openid, nickname, avatar_url) VALUES
 ('test_openid_1', '测试用户1', 'https://example.com/avatar1.jpg'),
-('test_openid_2', '测试用户2', 'https://example.com/avatar2.jpg'); 
+('test_openid_2', '测试用户2', 'https://example.com/avatar2.jpg');
+-- 插入账号密码用户
+INSERT INTO users (username, password, nickname, avatar_url) VALUES
+('user1', '123456', '账号用户1', 'https://example.com/avatar3.jpg'),
+('user2', 'abcdef', '账号用户2', 'https://example.com/avatar4.jpg'); 

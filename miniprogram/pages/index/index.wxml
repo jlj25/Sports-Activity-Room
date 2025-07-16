@@ -22,8 +22,7 @@
   <view class="masonry-column">
     <block wx:for="{{leftColumnVenues}}" wx:key="id">
       <view class="venue-card" bindtap="showVenueDetail" data-id="{{item.id}}">
-        <image src="../../images/{{item.cover}}" class="venue-img" mode="aspectFill" />
-        <view class="venue-badge">{{item.category}}</view>
+        <image src="{{item.cover}}" class="venue-img" mode="aspectFill" />
         <view class="venue-info">
           <text class="venue-title">{{item.name}}</text>
           <view class="venue-rating">
@@ -39,7 +38,14 @@
             <text class="unit">/小时起</text>
           </view>
           <view class="button-group">
-            <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即报名</button>
+            <button 
+              class="reserve-btn {{isBooked(item.id) ? 'reserve-btn-disabled' : ''}}" 
+              bindtap="onReserve" 
+              data-id="{{item.id}}" 
+              disabled="{{isBooked(item.id)}}"
+            >
+              {{isBooked(item.id) ? '已报名' : '立即报名'}}
+            </button>
             <button class="favorite-btn {{isFavorite(item.id) ? 'favorite-btn-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">
               {{isFavorite(item.id) ? '已收藏' : '收藏'}}
             </button>
@@ -52,8 +58,7 @@
   <view class="masonry-column">
     <block wx:for="{{rightColumnVenues}}" wx:key="id">
       <view class="venue-card" bindtap="showVenueDetail" data-id="{{item.id}}">
-        <image src="../../images/{{item.cover}}" class="venue-img" mode="aspectFill" />
-        <view class="venue-badge">{{item.category}}</view>
+        <image src="{{item.cover}}" class="venue-img" mode="aspectFill" />
         <view class="venue-info">
           <text class="venue-title">{{item.name}}</text>
           <view class="venue-rating">
@@ -69,7 +74,14 @@
             <text class="unit">/小时起</text>
           </view>
           <view class="button-group">
-            <button class="reserve-btn" bindtap="onReserve" data-id="{{item.id}}">立即报名</button>
+            <button 
+              class="reserve-btn {{isBooked(item.id) ? 'reserve-btn-disabled' : ''}}" 
+              bindtap="onReserve" 
+              data-id="{{item.id}}" 
+              disabled="{{isBooked(item.id)}}"
+            >
+              {{isBooked(item.id) ? '已报名' : '立即报名'}}
+            </button>
             <button class="favorite-btn {{isFavorite(item.id) ? 'favorite-btn-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">
               {{isFavorite(item.id) ? '已收藏' : '收藏'}}
             </button>
@@ -104,11 +116,20 @@
       <text>{{selectedVenue.description}}</text>
     </view>
   </view>
-  <button class="detail-reserve-btn">立即报名</button>
-  <button class="detail-favorite-btn" bindtap="toggleFavoriteDetail">
-    {{favoriteVenues && selectedVenue.id && favoriteVenues.includes(selectedVenue.id) ? '已收藏' : '收藏'}}
-  </button>
-  <button class="detail-delete-btn" bindtap="deleteVenue">删除该活动</button>
+  <view class="button-group">
+    <button 
+      class="detail-reserve-btn {{isBooked(selectedVenue.id) ? 'reserve-btn-disabled' : ''}}" 
+      bindtap="onReserve" 
+      data-id="{{selectedVenue.id}}" 
+      disabled="{{isBooked(selectedVenue.id)}}"
+    >
+      {{isBooked(selectedVenue.id) ? '已报名' : '立即报名'}}
+    </button>
+    <button class="detail-favorite-btn" bindtap="toggleFavoriteDetail">
+      {{favoriteVenues && selectedVenue.id && favoriteVenues.includes(selectedVenue.id) ? '已收藏' : '收藏'}}
+    </button>
+  </view>
+  <!-- 删除按钮已移除，仅管理员可在活动管理中操作 -->
   <!-- 评论区 -->
   <view class="comment-section">
     <view class="comment-list">
@@ -150,4 +171,30 @@
       <button bindtap="submitComment">发送</button>
     </view>
   </view>
+</view>
+
+<!-- 报名弹窗 -->
+<view class="booking-modal-mask" wx:if="{{showBookingModal}}" bindtap="closeBookingModal"></view>
+<view class="booking-modal" wx:if="{{showBookingModal}}">
+  <view class="booking-modal-title">填写报名信息</view>
+  <view class="booking-modal-row">
+    <text>日期：</text>
+    <picker mode="date" value="{{bookingDate}}" bindchange="onBookingDateChange">
+      <view class="picker-value">{{bookingDate || '请选择日期'}}</view>
+    </picker>
+  </view>
+  <view class="booking-modal-row">
+    <text>开始时间：</text>
+    <picker mode="time" value="{{bookingStartTime}}" bindchange="onBookingStartTimeChange">
+      <view class="picker-value">{{bookingStartTime || '请选择开始时间'}}</view>
+    </picker>
+  </view>
+  <view class="booking-modal-row">
+    <text>结束时间：</text>
+    <picker mode="time" value="{{bookingEndTime}}" bindchange="onBookingEndTimeChange">
+      <view class="picker-value">{{bookingEndTime || '请选择结束时间'}}</view>
+    </picker>
+  </view>
+  <button class="booking-modal-btn" bindtap="submitBooking">提交报名</button>
+  <button class="booking-modal-cancel" bindtap="closeBookingModal">取消</button>
 </view>

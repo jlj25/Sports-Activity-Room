@@ -1,54 +1,320 @@
 <view class="my-container">
-  <view class="user-info">
-    <image class="avatar" src="{{userInfo.avatar}}" />
-    <text class="nickname">{{userInfo.nickname}}</text>
-  </view>
-  <view class="my-list">
-    <view class="my-item" bindtap="openMyActivitiesModal">我的活动</view>
-    <view class="my-item" bindtap="openMyFavoritesModal">我的收藏</view>
-    <view class="my-item">设置</view>
-  </view>
-  <view class="favorite-list">
-  <view wx:for="{{favoriteVenues}}" wx:key="id" class="favorite-item">
-    <text>{{getVenueName(item)}}</text>
-    <button bindtap="removeFavorite" data-id="{{item}}">移除</button>
-  </view>
-</view>
-  <button class="login-btn" wx:if="{{!isLogin}}" bindtap="onLogin">微信一键登录</button>
-
-<!-- 我的活动模态框 -->
-<view class="modal-mask" wx:if="{{showMyActivitiesModal}}" bindtap="closeMyActivitiesModal"></view>
-<view class="modal-content" wx:if="{{showMyActivitiesModal}}">
-  <view class="modal-header">
-    <text>我的活动</text>
-    <button class="close-btn" bindtap="closeMyActivitiesModal">关闭</button>
-  </view>
-  <scroll-view scroll-y style="max-height:60vh;">
-    <block wx:for="{{myActivities}}" wx:key="id">
-      <view class="activity-item">
-        <text>{{item.name}}</text>
-        <button bindtap="goToEditFromModal" data-id="{{item.id}}">编辑</button>
-        <button bindtap="deleteActivityFromModal" data-id="{{item.id}}">删除</button>
+  <!-- 设置页 -->
+  <view wx:if="{{showSettingsPage}}">
+    <view class="settings-back-btn" bindtap="closeSettingsPage">←</view>
+    <view wx:if="{{adminMode}}" class="admin-panel">
+      <button class="admin-panel-btn" bindtap="openVenueReview">活动审核</button>
+      <button class="admin-panel-btn" bindtap="openAdminVenueManage">活动管理</button>
+      <button class="admin-panel-btn" bindtap="openUserManagement">用户管理</button>
+    </view>
+    <view class="settings-list">
+      <view wx:if="{{adminMode}}" class="settings-item" style="color:#07c160;font-weight:bold;text-align:center;">已进入管理员模式</view>
+      <view class="settings-item">
+        <button class="logout-btn" bindtap="logout">退出登录</button>
       </view>
-    </block>
-    <view wx:if="{{myActivities.length === 0}}" class="empty">暂无活动</view>
-  </scroll-view>
-</view>
-<!-- 我的收藏模态框 -->
-<view class="modal-mask" wx:if="{{showMyFavoritesModal}}" bindtap="closeMyFavoritesModal"></view>
-<view class="modal-content" wx:if="{{showMyFavoritesModal}}">
-  <view class="modal-header">
-    <text>我的收藏</text>
-    <button class="close-btn" bindtap="closeMyFavoritesModal">关闭</button>
-  </view>
-  <scroll-view scroll-y style="max-height:60vh;">
-    <block wx:for="{{myFavorites}}" wx:key="id">
-      <view class="activity-item">
-        <text>{{item.name}}</text>
-        <button bindtap="removeFavoriteFromModal" data-id="{{item.id}}">移除</button>
+      <view class="settings-item" wx:if="{{!adminMode}}">
+        <button class="admin-btn" bindtap="loginAsAdmin">进入管理员模式</button>
       </view>
-    </block>
-    <view wx:if="{{myFavorites.length === 0}}" class="empty">暂无收藏</view>
-  </scroll-view>
-</view>
+      <view class="settings-item" wx:if="{{adminMode}}">
+        <button class="admin-btn" bindtap="logoutAdmin">退出管理员模式</button>
+      </view>
+    </view>
+  </view>
+  <!-- 主内容，仅在未进入设置页时显示 -->
+  <view wx:if="{{!showSettingsPage}}">
+    <view class="user-info">
+      <image class="avatar" src="{{userInfo.avatar}}" bindtap="openChangeAvatar" />
+      <text class="nickname" bindtap="openChangeNickname">{{userInfo.nickname}}</text>
+    </view>
+    <view class="my-list">
+      <view class="my-item" bindtap="openMyActivitiesModal">我的发布</view>
+      <view class="my-item" bindtap="openMyFavoritesModal">我的收藏</view>
+      <view class="my-item" bindtap="openMyBookingsModal">我的报名</view>
+      <view class="my-item" bindtap="openSettingsPage">设置</view>
+    </view>
+    <!-- 登录按钮区：未登录时显示 -->
+    <view class="login-btn-row" wx:if="{{!isLogin}}">
+      <button class="login-btn" bindtap="onLogin">微信一键登录</button>
+      <button class="login-btn account" bindtap="openAccountLogin">账号登录</button>
+    </view>
+    <!-- 我的发布模态框 -->
+    <view class="modal-mask" wx:if="{{showMyActivitiesModal}}" bindtap="closeMyActivitiesModal"></view>
+    <view class="modal-content" wx:if="{{showMyActivitiesModal}}">
+      <view class="modal-header">
+        <text>我的发布</text>
+        <view class="close-btn" bindtap="closeMyActivitiesModal">×</view>
+      </view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{myActivities}}" wx:key="id">
+          <view class="activity-item">
+            <view bindtap="goToVenueDetailFromModal" data-id="{{item.id}}">
+              <view class="venue-name">{{item.name}}</view>
+              <view class="booking-info">
+                <text>时间：{{item.business_hours}}</text>
+                <text>地点：{{item.location}}</text>
+                <text>类型：{{item.category}}</text>
+                <text>状态：{{item.status == 'pending' ? '待审核' : (item.status == 'approved' ? '已通过' : '已拒绝')}}</text>
+              </view>
+            </view>
+            <view class="activity-btn-group">
+              <button catchtap="goToEditFromModal" data-id="{{item.id}}">编辑</button>
+              <button catchtap="endActivityFromModal" data-id="{{item.id}}">结束活动</button>
+              <button catchtap="openActivityBookings" data-id="{{item.id}}">查看报名</button>
+              <button catchtap="openManageComments" data-id="{{item.id}}">管理评论</button>
+            </view>
+          </view>
+        </block>
+        <view wx:if="{{myActivities.length === 0}}" class="empty">暂无活动</view>
+      </scroll-view>
+    </view>
+    <!-- 活动报名审核弹窗 -->
+    <view wx:if="{{showActivityBookingsModal}}">
+      <view class="modal-mask" bindtap="closeActivityBookings"></view>
+      <view class="modal-content admin-modal">
+        <view class="modal-header"><text>报名审核</text><view class="close-btn" bindtap="closeActivityBookings">×</view></view>
+        <scroll-view scroll-y style="max-height:60vh;">
+          <block wx:for="{{activityBookings}}" wx:key="id">
+            <view class="activity-item">
+              <view>
+                <view class="venue-name">{{item.user_nickname}}</view>
+                <view class="booking-info">
+                  <text>日期：{{item.date}}</text>
+                  <text>时间：{{item.start_time}}-{{item.end_time}}</text>
+                  <text>状态：{{item.status == 'pending' ? '待审核' : (item.status == 'confirmed' ? '已通过' : '已拒绝')}}</text>
+                </view>
+              </view>
+              <button wx:if="{{item.status == 'pending'}}" catchtap="approveActivityBooking" data-id="{{item.id}}">通过</button>
+              <button wx:if="{{item.status == 'pending'}}" catchtap="rejectActivityBooking" data-id="{{item.id}}">拒绝</button>
+            </view>
+          </block>
+          <view wx:if="{{activityBookings.length === 0}}" class="empty">暂无报名</view>
+        </scroll-view>
+      </view>
+    </view>
+    <!-- 我的收藏模态框 -->
+    <view class="modal-mask" wx:if="{{showMyFavoritesModal}}" bindtap="closeMyFavoritesModal"></view>
+    <view class="modal-content" wx:if="{{showMyFavoritesModal}}">
+      <view class="modal-header">
+        <text>我的收藏</text>
+        <view class="close-btn" bindtap="closeMyFavoritesModal">×</view>
+      </view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{myFavorites}}" wx:key="id">
+          <view class="activity-item" bindtap="goToVenueDetailFromModal" data-id="{{item.id}}">
+            <view>
+              <view class="venue-name">{{item.name}}</view>
+              <view class="booking-info">
+                <text>时间：{{item.business_hours}}</text>
+                <text>地点：{{item.location}}</text>
+                <text>类型：{{item.category}}</text>
+              </view>
+            </view>
+            <view class="activity-btn-group">
+              <button catchtap="removeFavoriteFromModal" data-id="{{item.id}}">取消收藏</button>
+            </view>
+          </view>
+        </block>
+        <view wx:if="{{myFavorites.length === 0}}" class="empty">暂无收藏</view>
+      </scroll-view>
+    </view>
+    <!-- 我的报名模态框 -->
+    <view class="modal-mask" wx:if="{{showMyBookingsModal}}" bindtap="closeMyBookingsModal"></view>
+    <view class="modal-content" wx:if="{{showMyBookingsModal}}">
+      <view class="modal-header">
+        <text>我的报名</text>
+        <view class="close-btn" bindtap="closeMyBookingsModal">×</view>
+      </view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{myBookings}}" wx:key="id">
+          <view class="activity-item" bindtap="goToVenueDetailFromModal" data-id="{{item.venue_id}}">
+            <view>
+              <view class="venue-name">{{item.venue_name}}</view>
+              <view class="booking-info">
+                <text>日期：{{item.date}}</text>
+                <text>时间：{{item.start_time}} - {{item.end_time}}</text>
+                <text>状态：{{item.status == 'pending' ? '待确认' : (item.status == 'confirmed' ? '已确认' : '已取消')}} </text>
+              </view>
+            </view>
+            <view class="activity-btn-group">
+              <button wx:if="{{item.status !== 'cancelled'}}" catchtap="cancelBookingFromModal" data-id="{{item.id}}">取消报名</button>
+            </view>
+          </view>
+        </block>
+        <view wx:if="{{myBookings.length === 0}}" class="empty">暂无报名</view>
+      </scroll-view>
+    </view>
+    <!-- 账号登录弹窗 -->
+    <view wx:if="{{showAccountLoginModal}}">
+      <view class="modal-mask" bindtap="closeAccountLoginModal"></view>
+      <view class="modal-content login-modal">
+        <view class="modal-header"><text>账号登录</text></view>
+        <view style="height: 20rpx"> </view>
+        <view class="modal-body">
+          <input class="modal-input" placeholder="账号" value="{{accountLoginUsername}}" bindinput="onAccountLoginUsernameInput" />
+          <input class="modal-input" placeholder="密码" password value="{{accountLoginPassword}}" bindinput="onAccountLoginPasswordInput" />
+        </view>
+        <button class="modal-btn" bindtap="submitAccountLogin">登录</button>
+        <view style="height: 10rpx"> </view>
+        <view class="modal-footer">
+          <text class="modal-link-text" bindtap="openRegisterFromLogin">还没有账号，前往注册</text>
+        </view>
+      </view>
+    </view>
+    <!-- 注册弹窗 -->
+    <view wx:if="{{showRegisterModal}}">
+      <view class="modal-mask" bindtap="closeRegisterModal"></view>
+      <view class="modal-content login-modal">
+        <view class="modal-header"><text>账号注册</text></view>
+        <view style="height: 20rpx"> </view>
+        <view class="modal-body">
+          <input class="modal-input" placeholder="账号" value="{{registerUsername}}" bindinput="onRegisterUsernameInput" />
+          <input class="modal-input" placeholder="密码" password value="{{registerPassword}}" bindinput="onRegisterPasswordInput" />
+          <input class="modal-input" placeholder="昵称（可选）" value="{{registerNickname}}" bindinput="onRegisterNicknameInput" />
+        </view>
+        <button class="modal-btn" bindtap="submitRegister">注册</button>
+        <view style="height: 10rpx"> </view>
+        <view class="modal-footer">
+          <text class="modal-link-text" bindtap="backToLoginFromRegister">已有账号，返回登录</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 活动审核弹窗 -->
+  <view wx:if="{{showVenueReviewModal}}">
+    <view class="modal-mask" bindtap="closeVenueReview"></view>
+    <view class="modal-content admin-modal">
+      <view class="modal-header"><text>活动审核</text><view class="close-btn" bindtap="closeVenueReview">×</view></view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{pendingVenues}}" wx:key="id">
+          <view class="activity-item">
+            <view>
+              <view class="venue-name">{{item.name}}</view>
+              <view class="booking-info">
+                <text>时间：{{item.business_hours}}</text>
+                <text>地点：{{item.location}}</text>
+                <text>类型：{{item.category}}</text>
+                <text>发布者ID：{{item.creator_id}}</text>
+              </view>
+            </view>
+            <button catchtap="approveVenue" data-id="{{item.id}}">通过</button>
+            <button catchtap="rejectVenue" data-id="{{item.id}}">拒绝</button>
+          </view>
+        </block>
+        <view wx:if="{{pendingVenues.length === 0}}" class="empty">暂无待审核活动</view>
+      </scroll-view>
+    </view>
+  </view>
+  <!-- 用户管理弹窗 -->
+  <view wx:if="{{showUserManagementModal}}">
+    <view class="modal-mask" bindtap="closeUserManagement"></view>
+    <view class="modal-content admin-modal">
+      <view class="modal-header"><text>用户管理</text><view class="close-btn" bindtap="closeUserManagement">×</view></view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{allUsers}}" wx:key="id">
+          <view class="activity-item">
+            <view>
+              <view class="venue-name">{{item.nickname || item.username}}</view>
+              <view class="booking-info">
+                <text>账号：{{item.username}}</text>
+                <text>状态：{{item.disabled ? '已禁用' : '正常'}}</text>
+              </view>
+            </view>
+            <button wx:if="{{!item.disabled}}" catchtap="disableUser" data-id="{{item.id}}">禁用</button>
+            <button wx:if="{{item.disabled}}" catchtap="enableUser" data-id="{{item.id}}">恢复</button>
+            <button catchtap="deleteUser" data-id="{{item.id}}">删除</button>
+          </view>
+        </block>
+        <view wx:if="{{allUsers.length === 0}}" class="empty">暂无用户</view>
+      </scroll-view>
+    </view>
+  </view>
+  <!-- 新增：评论管理弹窗 -->
+  <view wx:if="{{showManageCommentsModal}}">
+    <view class="modal-mask" bindtap="closeManageComments"></view>
+    <view class="modal-content admin-modal">
+      <view class="modal-header"><text>评论管理</text><view class="close-btn" bindtap="closeManageComments">×</view></view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{manageCommentsList}}" wx:key="id">
+          <view class="activity-item">
+            <view>
+              <view class="venue-name">{{item.nickname}}</view>
+              <view class="booking-info">
+                <text>{{item.content}}</text>
+                <text>{{item.created_at}}</text>
+              </view>
+            </view>
+            <button catchtap="deleteCommentFromManage" data-id="{{item.id}}">删除</button>
+          </view>
+        </block>
+        <view wx:if="{{manageCommentsList.length === 0}}" class="empty">暂无评论</view>
+      </scroll-view>
+    </view>
+  </view>
+  <!-- 管理员活动管理弹窗 -->
+  <view wx:if="{{showAdminVenueManageModal}}">
+    <view class="modal-mask" bindtap="closeAdminVenueManage"></view>
+    <view class="modal-content admin-modal">
+      <view class="modal-header"><text>活动管理</text><view class="close-btn" bindtap="closeAdminVenueManage">×</view></view>
+      <scroll-view scroll-y style="max-height:60vh;">
+        <block wx:for="{{adminAllVenues}}" wx:key="id">
+          <view class="activity-item">
+            <view>
+              <view class="venue-name">{{item.name}}</view>
+              <view class="booking-info">
+                <text>时间：{{item.business_hours}}</text>
+                <text>地点：{{item.location}}</text>
+                <text>类型：{{item.category}}</text>
+                <text>状态：{{item.status}}</text>
+              </view>
+            </view>
+            <view class="activity-btn-group">
+              <button wx:if="{{item.status !== 'ended'}}" catchtap="adminEndVenue" data-id="{{item.id}}">结束活动</button>
+              <button catchtap="adminDeleteVenue" data-id="{{item.id}}">删除</button>
+            </view>
+          </view>
+        </block>
+        <view wx:if="{{adminAllVenues.length === 0}}" class="empty">暂无活动</view>
+      </scroll-view>
+    </view>
+  </view>
+  <!-- 更换头像弹窗 -->
+  <view wx:if="{{showChangeAvatarModal}}">
+    <view class="modal-mask" bindtap="closeChangeAvatar"></view>
+    <view class="modal-content login-modal">
+      <view class="modal-header"><text>更换头像</text></view>
+      <view style="height: 20rpx"> </view>
+      <view class="modal-body" style="align-items:center;">
+        <image wx:if="{{newAvatarUrl}}" src="{{newAvatarUrl}}" style="width:120rpx;height:120rpx;border-radius:50%;margin-bottom:16rpx;" />
+        <button class="modal-btn" bindtap="chooseAvatar">选择图片</button>
+      </view>
+      <button class="modal-btn" bindtap="uploadAvatar">上传并更换</button>
+      <button class="modal-btn" style="background:#f0f0f0;color:#888;" bindtap="closeChangeAvatar">取消</button>
+    </view>
+  </view>
+  <!-- 更换昵称弹窗 -->
+  <view wx:if="{{showChangeNicknameModal}}">
+    <view class="modal-mask" bindtap="closeChangeNickname"></view>
+    <view class="modal-content login-modal">
+      <view class="modal-header"><text>更换昵称</text></view>
+      <view style="height: 20rpx"> </view>
+      <view class="modal-body">
+        <input class="modal-input" placeholder="请输入新昵称" value="{{newNickname}}" bindinput="onChangeNicknameInput" />
+      </view>
+      <button class="modal-btn" bindtap="submitChangeNickname">确认</button>
+      <button class="modal-btn" style="background:#f0f0f0;color:#888;" bindtap="closeChangeNickname">取消</button>
+    </view>
+  </view>
+  <!-- 管理员登录弹窗 -->
+  <view wx:if="{{showAdminLoginModal}}">
+    <view class="modal-mask" bindtap="closeAdminLoginModal"></view>
+    <view class="modal-content login-modal">
+      <view class="modal-header"><text>管理员登录</text></view>
+      <view style="height: 20rpx"> </view>
+      <view class="modal-body">
+        <input class="modal-input" placeholder="请输入管理员密码" password value="{{adminLoginPassword}}" bindinput="onAdminLoginPasswordInput" />
+      </view>
+      <button class="modal-btn" bindtap="submitAdminLoginModal">确认</button>
+      <button class="modal-btn" style="background:#f0f0f0;color:#888;" bindtap="closeAdminLoginModal">取消</button>
+    </view>
+  </view>
 </view>

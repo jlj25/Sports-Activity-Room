@@ -35,6 +35,8 @@ input, picker {
   background: #f7f7f7;
   min-height: 100vh;
   padding: 0 0 80rpx 0;
+  overflow-x: hidden;
+  width: 100vw;
 }
 .xhs-title {
   font-size: 44rpx;
@@ -45,7 +47,7 @@ input, picker {
   letter-spacing: 2rpx;
 }
 .xhs-cover-card {
-  width: 92vw;
+  width: 93vw;
   margin: 0 auto 32rpx auto;
   background: #fff;
   border-radius: 24rpx;
@@ -96,15 +98,21 @@ input, picker {
   background: #fff;
   border-radius: 24rpx;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  margin: 0 16rpx 32rpx 16rpx;
+  margin: 0 24rpx 32rpx 24rpx;
   padding: 32rpx 24rpx 12rpx 24rpx;
 }
+.xhs-input, .xhs-picker, .xhs-textarea {
+  height: 100%;
+  box-sizing: border-box;
+}
 .xhs-form-item {
+  width: 94%;
+  box-sizing: border-box;
   margin-bottom: 28rpx;
 }
 .xhs-input {
-  width: 100%;
-  padding: 22rpx 24rpx;
+  width: 107%;
+  padding: 22rpx 28rpx;
   border: none;
   border-radius: 16rpx;
   background: #f7f7f7;
@@ -114,7 +122,9 @@ input, picker {
 }
 .xhs-picker {
   width: 100%;
-  padding: 22rpx 24rpx;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 6rpx 12rpx;
   border-radius: 16rpx;
   background: #f7f7f7;
   font-size: 30rpx;
@@ -122,8 +132,8 @@ input, picker {
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 .xhs-textarea {
-  width: 100%;
-  min-height: 120rpx;
+  width: 107%;
+  min-height: 250rpx;
   padding: 22rpx 24rpx;
   border-radius: 16rpx;
   background: #f7f7f7;
@@ -153,7 +163,7 @@ input, picker {
   gap: 12rpx;
 }
 .xhs-time-preview {
-  color: #ff4757;
+  color: #07c160;
   font-size: 28rpx;
   margin-left: 8rpx;
 } 

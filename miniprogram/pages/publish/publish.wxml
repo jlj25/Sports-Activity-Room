@@ -1,4 +1,5 @@
 <view class="publish-xhs-container">
+  <view style="height: 24rpx"> </view>
   <view class="xhs-cover-card">
     <view class="xhs-cover-upload" bindtap="chooseImage">
       <image wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" class="xhs-cover-img" />

@@ -22,7 +22,15 @@ Page({
     replyToCommentId: null as number | null,
     replyToUserId: null as number | null,
     replyToNickname: '',
-    replyPlaceholder: '说点什么...'
+    replyPlaceholder: '说点什么...',
+    showBookingModal: false,
+    bookingVenueId: null as number | null,
+    bookingDate: '',
+    bookingStartTime: '',
+    bookingEndTime: '',
+    userBookings: [] as any[],
+    adminMode: false,
+    userInfo: null as any, // 新增
   },
 
   // 检查是否收藏
@@ -261,16 +269,24 @@ Page({
 
       if (res.statusCode === 200) {
         // 处理sports字段（从JSON字符串转换为数组）
-        const venues = res.data.map((venue: any) => ({
-          ...venue,
-          sports: typeof venue.sports === 'string' ? JSON.parse(venue.sports) : venue.sports
-        }));
-        
+        const venues = res.data.map((venue: any) => {
+          let sports = typeof venue.sports === 'string' ? JSON.parse(venue.sports) : venue.sports;
+          let cover = venue.cover;
+          if (cover && !/^https?:\/\//.test(cover) && cover) {
+            if (cover.startsWith('/uploads/')) {
+              cover = `${API_BASE_URL}${cover}`;
+            } else if (cover.startsWith('/images/')) {
+              cover = cover;
+            } else {
+              cover = '/images/' + cover;
+            }
+          }
+          return { ...venue, sports, cover };
+        });
         this.setData({
           venues: venues,
           filteredVenues: venues
         });
-        
         // 将活动分成左右两列
         this.splitVenuesIntoColumns(venues);
       }
@@ -298,23 +314,61 @@ Page({
   },
 
   // 页面加载
-  onLoad() {
+  onLoad(options) {
     this.fetchVenues();
     // 同步userId
     const userInfo = wx.getStorageSync('userInfo');
     this.setData({
       userId: userInfo && userInfo.id ? userInfo.id : null
     });
+    this.fetchUserBookings();
+    if (options && options.id) {
+      // 延迟到场馆数据加载后再进入详情
+      const tryShowDetail = () => {
+        const id = Number(options.id);
+        const venue = this.data.venues.find((v: any) => v.id === id);
+        if (venue) {
+          this.showVenueDetail({ currentTarget: { dataset: { id } } });
+        } else {
+          setTimeout(tryShowDetail, 100);
+        }
+      };
+      tryShowDetail();
+    }
   },
 
   // 页面显示时同步本地收藏和userId
   onShow() {
     const favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
     const userInfo = wx.getStorageSync('userInfo');
+    const adminMode = wx.getStorageSync('adminMode') || false;
     this.setData({
       favoriteVenues,
-      userId: userInfo && userInfo.id ? userInfo.id : null
+      userId: userInfo && userInfo.id ? userInfo.id : null,
+      adminMode,
+      userInfo // 新增 userInfo
     });
+    this.fetchUserBookings();
+    // 支持 tabBar 跳转后自动进入详情
+    const showVenueDetailId = wx.getStorageSync('showVenueDetailId');
+    if (showVenueDetailId) {
+      this.showVenueDetail({ currentTarget: { dataset: { id: Number(showVenueDetailId) } } });
+      wx.removeStorageSync('showVenueDetailId');
+    }
+    // 新增：支持 tabBar 跳转后自动进入编辑
+    const showEditVenueId = wx.getStorageSync('showEditVenueId');
+    if (showEditVenueId) {
+      wx.removeStorageSync('showEditVenueId');
+      wx.navigateTo({ url: `/pages/publish/publish?id=${showEditVenueId}` });
+      return; // 跳转后不再执行后续逻辑
+    }
+    // 新增：如需刷新评论区
+    if (this.data.currentView === 'detail' && this.data.selectedVenue && this.data.selectedVenue.id) {
+      if (wx.getStorageSync('refreshIndexComments')) {
+        this.fetchComments(this.data.selectedVenue.id);
+        wx.removeStorageSync('refreshIndexComments');
+      }
+    }
   },
 
   // 获取用户收藏
@@ -360,10 +414,60 @@ Page({
       });
       return;
     }
-    
     const venueId = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/publish/publish?venueId=${venueId}`
+    this.setData({
+      showBookingModal: true,
+      bookingVenueId: venueId,
+      bookingDate: '',
+      bookingStartTime: '',
+      bookingEndTime: ''
+    });
+  },
+  // 关闭报名弹窗
+  closeBookingModal() {
+    this.setData({ showBookingModal: false });
+  },
+  // 选择日期
+  onBookingDateChange(e: any) {
+    this.setData({ bookingDate: e.detail.value });
+  },
+  // 选择开始时间
+  onBookingStartTimeChange(e: any) {
+    this.setData({ bookingStartTime: e.detail.value });
+  },
+  // 选择结束时间
+  onBookingEndTimeChange(e: any) {
+    this.setData({ bookingEndTime: e.detail.value });
+  },
+  // 提交报名
+  submitBooking() {
+    const { userId, bookingVenueId, bookingDate, bookingStartTime, bookingEndTime } = this.data;
+    if (!bookingDate || !bookingStartTime || !bookingEndTime) {
+      wx.showToast({ title: '请填写完整', icon: 'none' });
+      return;
+    }
+    wx.request({
+      url: `${API_BASE_URL}/bookings`,
+      method: 'POST',
+      data: {
+        user_id: userId,
+        venue_id: bookingVenueId,
+        date: bookingDate,
+        start_time: bookingStartTime,
+        end_time: bookingEndTime
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          wx.showToast({ title: '报名成功' });
+          this.setData({ showBookingModal: false });
+          this.fetchUserBookings();
+        } else {
+          wx.showToast({ title: '报名失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.showToast({ title: '网络错误', icon: 'none' });
+      }
     });
   },
 
@@ -379,7 +483,8 @@ Page({
     const id = e.currentTarget.dataset.id;
     this.fetchVenueDetail(id);
     this.fetchComments(id);
-    this.setData({ currentView: 'detail' });
+    const userInfo = wx.getStorageSync('userInfo');
+    this.setData({ currentView: 'detail', userInfo }); // 新增 userInfo
   },
   // 返回列表
   backToList() {
@@ -490,6 +595,61 @@ Page({
         };
         fillReplyNickname(data || []);
         this.setData({ comments: data || [] });
+      }
+    });
+  },
+  async fetchUserBookings() {
+    if (!this.data.userId) return;
+    try {
+      const res: any = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${API_BASE_URL}/bookings/${this.data.userId}`,
+          method: 'GET',
+          success: resolve,
+          fail: reject
+        });
+      });
+      if (Array.isArray(res.data)) {
+        this.setData({ userBookings: res.data });
+      }
+    } catch (e) {}
+  },
+  isBooked(venueId: number): boolean {
+    return this.data.userBookings.some(b => b.venue_id === venueId);
+  },
+  deleteVenue() {
+    const userInfo = wx.getStorageSync('userInfo');
+    const venue = this.data.selectedVenue;
+    const adminMode = this.data.adminMode;
+    if (!(adminMode || (userInfo && venue && userInfo.id === venue.creator_id))) {
+      wx.showToast({ title: '无权限', icon: 'none' });
+      return;
+    }
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除该活动吗？',
+      success: (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '删除中...' });
+          wx.request({
+            url: `${API_BASE_URL}/venues/${venue.id}`,
+            method: 'DELETE',
+            success: (delRes) => {
+              wx.hideLoading();
+              if (delRes.statusCode === 200) {
+                wx.showToast({ title: '删除成功' });
+                this.backToList();
+                this.fetchVenues();
+              } else {
+                wx.showToast({ title: '删除失败', icon: 'none' });
+              }
+            },
+            fail: () => {
+              wx.hideLoading();
+              wx.showToast({ title: '网络错误', icon: 'none' });
+            }
+          });
+        }
       }
     });
   }

@@ -64,7 +64,8 @@ page {
 .venue-info .reserve-btn,
 .venue-info .favorite-btn {
   display: inline-block;
-  width: calc(50% - 2px);
+  width: 48%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -145,6 +146,12 @@ page {
   min-width: 0;
 }
 
+.reserve-btn-disabled {
+  background: #eee !important;
+  color: #bbb !important;
+  border: none !important;
+}
+
 .favorite-btn {
   background: #f0f0f0;
   color: #666;
@@ -166,6 +173,23 @@ page {
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  width: 100%;
+  justify-content: center;
+}
+.reserve-btn, .favorite-btn {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 8px 0;
+  border-radius: 8px;
+  margin: 0;
+}
+.detail-reserve-btn, .detail-favorite-btn {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+  border-radius: 32rpx;
 }
 
 /* 搜索栏样式 */
@@ -262,11 +286,11 @@ page {
 }
 
 .back-btn {
-  position: absolute;
+  position: fixed;
   top: 30rpx;
-  left: 20rpx;
-  z-index: 10;
-  background: rgba(255,255,255,0.6);
+  left: 30rpx;
+  z-index: 1000;
+  background: rgba(255,255,255,0.8);
   border-radius: 50%;
   width: 64rpx;
   height: 64rpx;
@@ -276,7 +300,7 @@ page {
   font-size: 40rpx;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   border: none;
-  color: #ff4757;
+  color: rgba(0,0,0,0.7);
   padding: 0;
   overflow: hidden;
 }
@@ -303,7 +327,7 @@ page {
 
 .detail-badge {
   display: inline-block;
-  background: #ff4757;
+  background: #07c160;
   color: #fff;
   border-radius: 12px;
   padding: 6rpx 20rpx;
@@ -377,7 +401,7 @@ page {
   width: 80vw;
   margin: 32rpx auto 0 auto;
   display: block;
-  background: linear-gradient(90deg, #ff6a6a 0%, #ff4757 100%);
+  background: linear-gradient(90deg, #ff4757 0%, #faba43 100%);
   color: #fff;
   border: none;
   border-radius: 32rpx;
@@ -387,30 +411,18 @@ page {
   box-shadow: 0 4px 16px rgba(255,71,87,0.10);
 }
 
-.detail-delete-btn {
+.detail-favorite-btn {
   width: 80vw;
-  margin: 16rpx auto 0 auto;
+  margin: 32rpx auto 0 auto;
   display: block;
-  background: #e64340;
+  background: linear-gradient(90deg, #faba43 0%, #ffe865 100%);
   color: #fff;
   border: none;
   border-radius: 32rpx;
   font-size: 28rpx;
-  padding: 20rpx 0;
-}
-
-.detail-favorite-btn {
-  width: 80vw;
-  margin: 16rpx auto 0 auto;
-  display: block;
-  background: #fff0f0;
-  color: #ff4757;
-  border: 2rpx solid #ff4757;
-  border-radius: 32rpx;
-  font-size: 28rpx;
   font-weight: bold;
   padding: 20rpx 0;
-  box-shadow: 0 2px 8px rgba(255,71,87,0.06);
+  box-shadow: 0 4px 16px rgba(255,71,87,0.10);
 }
 .detail-favorite-btn[disabled], .detail-favorite-btn[aria-disabled="true"] {
   background: #f7f7f7;
@@ -437,8 +449,8 @@ page {
 }
 
 .avatar {
-  width: 56rpx;
-  height: 56rpx;
+  width: 58rpx;
+  height: 58rpx;
   border-radius: 50%;
   margin-right: 16rpx;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
@@ -450,7 +462,7 @@ page {
   border-radius: 12rpx;
   padding: 12rpx 16rpx;
   color: #333;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .nickname {
@@ -465,7 +477,7 @@ page {
 
 .time {
   color: #aaa;
-  font-size: 18rpx;
+  font-size: 19rpx;
   margin-left: 8rpx;
 }
 
@@ -473,6 +485,26 @@ page {
   margin-top: 8rpx;
   display: flex;
   gap: 12rpx;
+}
+.comment-actions button {
+  min-width: 60rpx;
+  height: 44rpx;
+  padding: 0 16rpx;
+  font-size: 22rpx;
+  border-radius: 20rpx;
+  background: #f0f0f0;
+  color: #666;
+  border: none;
+  margin: 0;
+  line-height: 44rpx;
+}
+.comment-actions button:first-child {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+.comment-actions button:last-child {
+  background: #fff0f0;
+  color: #ff4757;
 }
 
 .comment-input-bar {
@@ -486,7 +518,7 @@ page {
 }
 
 .comment-input-bar input {
-  flex: 1;
+  flex: 3;
   border: 1px solid #eee;
   border-radius: 20rpx;
   padding: 12rpx 16rpx;
@@ -495,11 +527,12 @@ page {
 }
 
 .comment-input-bar button {
-  background: #ff4757;
+  flex: 1;
+  background: #07c160;
   color: #fff;
   border: none;
   border-radius: 20rpx;
-  padding: 12rpx 24rpx;
+  padding: 20rpx 24rpx;
   font-size: 22rpx;
 }
 
@@ -508,4 +541,48 @@ page {
   color: #bbb;
   font-size: 22rpx;
   margin: 32rpx 0;
+}
+
+.booking-modal-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3); z-index: 1000;
+}
+.booking-modal {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  background: #fff; border-radius: 16rpx; width: 80vw; z-index: 1001;
+  box-shadow: 0 4px 24px #0002; padding: 32rpx 24rpx;
+  display: flex; flex-direction: column; gap: 24rpx;
+}
+.booking-modal-title {
+  font-size: 32rpx; color: #ff4757; font-weight: bold; text-align: center; margin-bottom: 12rpx;
+}
+.booking-modal-row {
+  display: flex; align-items: center; gap: 16rpx; font-size: 28rpx;
+}
+.picker-value {
+  color: #333; background: #f7f7f7; border-radius: 8rpx; padding: 8rpx 20rpx;
+}
+.booking-modal-btn {
+  background: #ff4757; color: #fff; border: none; border-radius: 12rpx; font-size: 28rpx; padding: 16rpx 0;
+}
+.booking-modal-cancel {
+  background: #f0f0f0; color: #888; border: none; border-radius: 12rpx; font-size: 28rpx; padding: 16rpx 0;
+  margin-top: 8rpx;
+}
+
+.reply-indent {
+  margin-left: 48rpx;
+  margin-top: 8rpx;
+  display: block;
+  width: 100%;
+}
+.reply-item {
+  display: block;
+  width: 100%;
+}
+.reply-item .comment-content {
+  word-break: break-all;
+  white-space: pre-line;
+  flex: 1;
+  display: block;
 }
