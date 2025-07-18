@@ -31,11 +31,23 @@ Page({
     userBookings: [] as any[],
     adminMode: false,
     userInfo: null as any, // 新增
+    forceUpdate: 0, // 强制更新标记
   },
 
   // 检查是否收藏
   isFavorite(id: number): boolean {
-    return this.data.favoriteVenues.includes(id);
+    const numId = Number(id);
+    const result = this.data.favoriteVenues.includes(numId);
+    console.log('isFavorite check:', id, typeof id, 'converted to:', numId, typeof numId, 'favorites:', this.data.favoriteVenues, 'result:', result);
+    
+    // 强制触发重新渲染
+    if (this.data.forceUpdate === undefined) {
+      this.setData({
+        forceUpdate: Date.now()
+      });
+    }
+    
+    return result;
   },
 
   // 切换收藏状态（首页卡片）
@@ -47,9 +59,12 @@ Page({
       });
       return;
     }
-    const venueId = e.currentTarget.dataset.id;
-    let favoriteVenues = this.data.favoriteVenues;
+    const venueId = Number(e.currentTarget.dataset.id);
+    let favoriteVenues = [...this.data.favoriteVenues]; // 创建副本
     const isFav = favoriteVenues.includes(venueId);
+    
+    console.log('toggleFavorite - venueId:', venueId, 'type:', typeof venueId, 'isFav:', isFav);
+    
     // 立即切换UI和本地缓存
     let newFavorites;
     if (isFav) {
@@ -57,10 +72,16 @@ Page({
     } else {
       newFavorites = [...favoriteVenues, venueId];
     }
+    
     console.log('收藏前:', favoriteVenues, '收藏后:', newFavorites, '当前id:', venueId, 'isFav:', isFav);
-    this.setData({ favoriteVenues: newFavorites });
+    
+    // 立即更新UI
+    this.setData({ 
+      favoriteVenues: newFavorites,
+      forceUpdate: Date.now()
+    });
     wx.setStorageSync('favoriteVenues', newFavorites);
-    this.splitVenuesIntoColumns(this.data.venues);
+    
     // 请求后端
     try {
       const res: any = await new Promise((resolve, reject) => {
@@ -97,9 +118,12 @@ Page({
       wx.showToast({ title: '请先登录', icon: 'none' });
       return;
     }
-    const venueId = this.data.selectedVenue.id;
-    let favoriteVenues = this.data.favoriteVenues;
+    const venueId = Number(this.data.selectedVenue.id);
+    let favoriteVenues = [...this.data.favoriteVenues]; // 创建副本
     const isFav = favoriteVenues.includes(venueId);
+    
+    console.log('toggleFavoriteDetail - venueId:', venueId, 'type:', typeof venueId, 'isFav:', isFav);
+    
     // 立即切换UI和本地缓存
     let newFavorites;
     if (isFav) {
@@ -107,9 +131,14 @@ Page({
     } else {
       newFavorites = [...favoriteVenues, venueId];
     }
-    this.setData({ favoriteVenues: newFavorites });
+    
+    // 立即更新UI
+    this.setData({ 
+      favoriteVenues: newFavorites,
+      forceUpdate: Date.now()
+    });
     wx.setStorageSync('favoriteVenues', newFavorites);
-    this.splitVenuesIntoColumns(this.data.venues);
+    
     // 请求后端
     wx.request({
       url: `${API_BASE_URL}/favorites`,
@@ -272,7 +301,7 @@ Page({
         const venues = res.data.map((venue: any) => {
           let sports = typeof venue.sports === 'string' ? JSON.parse(venue.sports) : venue.sports;
           let cover = venue.cover;
-          if (cover && !/^https?:\/\//.test(cover) && cover) {
+          if (cover && !/^https?:\/\//.test(cover)) {
             if (cover.startsWith('/uploads/')) {
               cover = `${API_BASE_URL}${cover}`;
             } else if (cover.startsWith('/images/')) {
@@ -342,8 +371,11 @@ Page({
     const favoriteVenues = wx.getStorageSync('favoriteVenues') || [];
     const userInfo = wx.getStorageSync('userInfo');
     const adminMode = wx.getStorageSync('adminMode') || false;
+    
+    console.log('onShow - favoriteVenues from storage:', favoriteVenues);
+    
     this.setData({
-      favoriteVenues,
+      favoriteVenues: favoriteVenues,
       userId: userInfo && userInfo.id ? userInfo.id : null,
       adminMode,
       userInfo // 新增 userInfo

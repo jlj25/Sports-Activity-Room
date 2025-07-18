@@ -45,7 +45,7 @@ Page({
         const tempFilePath = res.tempFilePaths[0];
         wx.showLoading({ title: '上传中...' });
         wx.uploadFile({
-          url: 'http://192.168.43.222:3000/api/upload', // 替换为你的后端地址
+          url: 'http://192.168.0.100:3000/api/upload', // 替换为你的后端地址
           filePath: tempFilePath,
           name: 'file',
           success: (uploadRes) => {
@@ -54,7 +54,7 @@ Page({
               const data = JSON.parse(uploadRes.data);
               if (data.url) {
                 // 拼接完整图片URL
-                const fullUrl = 'http://192.168.43.222:3000' + data.url;
+                const fullUrl = 'http://192.168.0.100:3000' + data.url;
                 this.setData({ cover: fullUrl });
               } else {
                 wx.showToast({ title: '上传失败', icon: 'none' });
@@ -76,7 +76,7 @@ Page({
       // 编辑模式，回显数据
       wx.showLoading({ title: '加载中...' });
       wx.request({
-        url: `http://192.168.43.222:3000/api/venues/${options.id}`,
+        url: `http://192.168.0.100:3000/api/venues/${options.id}`,
         method: 'GET',
         success: (res) => {
           wx.hideLoading();
@@ -137,7 +137,7 @@ Page({
     };
     if (editId) {
       wx.request({
-        url: `http://192.168.43.222:3000/api/venues/${editId}`,
+        url: `http://192.168.0.100:3000/api/venues/${editId}`,
         method: 'PUT',
         data: reqData,
         success: (res) => {
@@ -156,13 +156,26 @@ Page({
       });
     } else {
       wx.request({
-        url: 'http://192.168.43.222:3000/api/venues',
+        url: 'http://192.168.0.100:3000/api/venues',
         method: 'POST',
         data: reqData,
         success: (res) => {
           wx.hideLoading();
           if (res.statusCode === 200) {
             wx.showToast({ title: '发布成功' });
+            // 清空表单内容
+            this.setData({
+              name: '',
+              categoryIndex: 0,
+              date: '',
+              startTime: '',
+              endTime: '',
+              location: '',
+              price: '',
+              cover: '',
+              description: '',
+              editId: null
+            });
             wx.navigateBack();
           } else {
             wx.showToast({ title: '发布失败', icon: 'none' });

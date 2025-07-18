@@ -32,7 +32,7 @@
     "swc": false,
     "disableSWC": true,
     "disableUseStrict": false,
-    "lanIpForDev": "192.168.43.222",
+    "lanIpForDev": "192.168.0.100",
     "urlCheck": false
   },
   "simulatorType": "wechat",

@@ -40,15 +40,17 @@
           <view class="button-group">
             <button 
               class="reserve-btn {{isBooked(item.id) ? 'reserve-btn-disabled' : ''}}" 
-              bindtap="onReserve" 
+              catchtap="onReserve" 
               data-id="{{item.id}}" 
               disabled="{{isBooked(item.id)}}"
             >
               {{isBooked(item.id) ? '已报名' : '立即报名'}}
             </button>
-            <button class="favorite-btn {{isFavorite(item.id) ? 'favorite-btn-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">
-              {{isFavorite(item.id) ? '已收藏' : '收藏'}}
-            </button>
+            <view class="star-btn" catchtap="toggleFavorite" data-id="{{item.id}}">
+              <text wx:if="{{isFavorite(item.id)}}">★</text>
+              <text wx:else>☆</text>
+              <text style="display:none;">{{forceUpdate}}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -76,15 +78,17 @@
           <view class="button-group">
             <button 
               class="reserve-btn {{isBooked(item.id) ? 'reserve-btn-disabled' : ''}}" 
-              bindtap="onReserve" 
+              catchtap="onReserve" 
               data-id="{{item.id}}" 
               disabled="{{isBooked(item.id)}}"
             >
               {{isBooked(item.id) ? '已报名' : '立即报名'}}
             </button>
-            <button class="favorite-btn {{isFavorite(item.id) ? 'favorite-btn-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">
-              {{isFavorite(item.id) ? '已收藏' : '收藏'}}
-            </button>
+            <view class="star-btn" catchtap="toggleFavorite" data-id="{{item.id}}">
+              <text wx:if="{{isFavorite(item.id)}}">★</text>
+              <text wx:else>☆</text>
+              <text style="display:none;">{{forceUpdate}}</text>
+            </view>
           </view>
         </view>
       </view>

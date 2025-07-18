@@ -176,6 +176,21 @@ page {
   width: 100%;
   justify-content: center;
 }
+
+/* 详情页面的按钮组样式 */
+.detail-container .button-group {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0rpx;
+  margin-top: 30rpx;
+  border-radius: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(255,71,87,0.10);
+  width: 90vw;
+  margin-left: auto;
+  margin-right: auto;
+}
 .reserve-btn, .favorite-btn {
   flex: 1;
   min-width: 0;
@@ -189,7 +204,9 @@ page {
   min-width: 0;
   font-size: 28rpx;
   padding: 20rpx 0;
-  border-radius: 32rpx;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
 }
 
 /* 搜索栏样式 */
@@ -398,31 +415,31 @@ page {
 }
 
 .detail-reserve-btn {
-  width: 80vw;
-  margin: 32rpx auto 0 auto;
+  flex: 1;
+  margin: 0;
   display: block;
   background: linear-gradient(90deg, #ff4757 0%, #faba43 100%);
   color: #fff;
   border: none;
-  border-radius: 32rpx;
+  border-radius: 32rpx 0 0 32rpx;
   font-size: 28rpx;
   font-weight: bold;
   padding: 20rpx 0;
-  box-shadow: 0 4px 16px rgba(255,71,87,0.10);
+  box-shadow: none;
 }
 
 .detail-favorite-btn {
-  width: 80vw;
-  margin: 32rpx auto 0 auto;
+  flex: 1;
+  margin: 0;
   display: block;
   background: linear-gradient(90deg, #faba43 0%, #ffe865 100%);
   color: #fff;
   border: none;
-  border-radius: 32rpx;
+  border-radius: 0 32rpx 32rpx 0;
   font-size: 28rpx;
   font-weight: bold;
   padding: 20rpx 0;
-  box-shadow: 0 4px 16px rgba(255,71,87,0.10);
+  box-shadow: none;
 }
 .detail-favorite-btn[disabled], .detail-favorite-btn[aria-disabled="true"] {
   background: #f7f7f7;
@@ -585,4 +602,36 @@ page {
   white-space: pre-line;
   flex: 1;
   display: block;
+}
+
+.star-btn {
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50rpx;
+  color: #ffd700;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  margin-left: 8rpx;
+  transition: color 0.2s;
+}
+.star-btn-active {
+  background: #ffd700;
+  color: #fff;
+  border: 2rpx solid #ffd700;
+}
+
+/* 让立即报名按钮居中显示 */
+.button-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.reserve-btn {
+  flex: 1;
+  margin-right: 8rpx;
 }

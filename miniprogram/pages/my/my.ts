@@ -115,7 +115,7 @@ Page({
           success: (res) => {
             if (res.code) {
               wx.request({
-                url: 'http://192.168.43.222:3000/api/login',
+                url: 'http://192.168.0.100:3000/api/login',
                 method: 'POST',
                 data: {
                   code: res.code,
@@ -170,7 +170,7 @@ Page({
       return;
     }
     wx.request({
-      url: `http://192.168.43.222:3000/api/my_venues/${userInfo.id}`,
+      url: `http://192.168.0.100:3000/api/my_venues/${userInfo.id}`,
       method: 'GET',
       success: (res) => {
         this.setData({
@@ -204,7 +204,7 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '删除中...' });
           wx.request({
-            url: `http://192.168.43.222:3000/api/venues/${id}`,
+            url: `http://192.168.0.100:3000/api/venues/${id}`,
             method: 'DELETE',
             success: (delRes) => {
               wx.hideLoading();
@@ -234,7 +234,7 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '结束中...' });
           wx.request({
-            url: `http://192.168.43.222:3000/api/venues/${id}`,
+            url: `http://192.168.0.100:3000/api/venues/${id}`,
             method: 'PUT',
             data: { status: 'ended' },
             header: { 'Content-Type': 'application/json' },
@@ -264,7 +264,7 @@ Page({
       return;
     }
     wx.request({
-      url: `http://192.168.43.222:3000/api/favorites/${userInfo.id}`,
+      url: `http://192.168.0.100:3000/api/favorites/${userInfo.id}`,
       method: 'GET',
       success: (res) => {
         this.setData({
@@ -283,7 +283,7 @@ Page({
     const userInfo = wx.getStorageSync('userInfo');
     if (!userInfo || !userInfo.id) return;
     wx.request({
-      url: `http://192.168.43.222:3000/api/favorites`,
+      url: `http://192.168.0.100:3000/api/favorites`,
       method: 'POST',
       data: { userId: userInfo.id, venueId: id },
       header: { 'Content-Type': 'application/json' },
@@ -312,7 +312,7 @@ Page({
     }
     this.setData({ showMyBookingsModal: true });
     wx.request({
-      url: `http://192.168.43.222:3000/api/bookings/${userInfo.id}`,
+      url: `http://192.168.0.100:3000/api/bookings/${userInfo.id}`,
       method: 'GET',
       success: (res) => {
         this.setData({ myBookings: Array.isArray(res.data) ? res.data : [] });
@@ -331,7 +331,7 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '取消中...' });
           wx.request({
-            url: `http://192.168.43.222:3000/api/bookings/${id}`,
+            url: `http://192.168.0.100:3000/api/bookings/${id}`,
             method: 'PUT',
             data: { status: 'cancelled' },
             header: { 'Content-Type': 'application/json' },
@@ -413,7 +413,7 @@ Page({
       return;
     }
     wx.request({
-      url: 'http://192.168.43.222:3000/api/account_login',
+      url: 'http://192.168.0.100:3000/api/account_login',
       method: 'POST',
       data: { username, password },
       header: { 'Content-Type': 'application/json' },
@@ -468,7 +468,7 @@ Page({
       return;
     }
     wx.request({
-      url: 'http://192.168.43.222:3000/api/register',
+      url: 'http://192.168.0.100:3000/api/register',
       method: 'POST',
       data: { username, password, nickname },
       header: { 'Content-Type': 'application/json' },
@@ -511,7 +511,7 @@ Page({
   openBookingReview() {
     this.setData({ showBookingReviewModal: true });
     wx.request({
-      url: 'http://192.168.43.222:3000/api/all_bookings',
+      url: 'http://192.168.0.100:3000/api/all_bookings',
       method: 'GET',
       success: (res) => {
         this.setData({ allBookings: Array.isArray(res.data) ? res.data : [] });
@@ -524,7 +524,7 @@ Page({
   approveBooking(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/bookings/${id}`,
+      url: `http://192.168.0.100:3000/api/bookings/${id}`,
       method: 'PUT',
       data: { status: 'confirmed' },
       header: { 'Content-Type': 'application/json' },
@@ -534,7 +534,7 @@ Page({
   rejectBooking(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/bookings/${id}`,
+      url: `http://192.168.0.100:3000/api/bookings/${id}`,
       method: 'PUT',
       data: { status: 'cancelled' },
       header: { 'Content-Type': 'application/json' },
@@ -544,7 +544,7 @@ Page({
   openUserManagement() {
     this.setData({ showUserManagementModal: true });
     wx.request({
-      url: 'http://192.168.43.222:3000/api/all_users',
+      url: 'http://192.168.0.100:3000/api/all_users',
       method: 'GET',
       success: (res) => {
         this.setData({ allUsers: Array.isArray(res.data) ? res.data : [] });
@@ -557,7 +557,7 @@ Page({
   disableUser(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/users/${id}`,
+      url: `http://192.168.0.100:3000/api/users/${id}`,
       method: 'PUT',
       data: { disabled: true },
       header: { 'Content-Type': 'application/json' },
@@ -567,7 +567,7 @@ Page({
   enableUser(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/users/${id}`,
+      url: `http://192.168.0.100:3000/api/users/${id}`,
       method: 'PUT',
       data: { disabled: false },
       header: { 'Content-Type': 'application/json' },
@@ -577,7 +577,7 @@ Page({
   deleteUser(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/users/${id}`,
+      url: `http://192.168.0.100:3000/api/users/${id}`,
       method: 'DELETE',
       success: () => this.openUserManagement()
     });
@@ -587,7 +587,7 @@ Page({
     const activityId = e.currentTarget.dataset.id;
     this.setData({ showActivityBookingsModal: true });
     wx.request({
-      url: `http://192.168.43.222:3000/api/activity_bookings/${activityId}`,
+      url: `http://192.168.0.100:3000/api/activity_bookings/${activityId}`,
       method: 'GET',
       success: (res) => {
         this.setData({ activityBookings: Array.isArray(res.data) ? res.data : [] });
@@ -600,7 +600,7 @@ Page({
   approveActivityBooking(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/bookings/${id}`,
+      url: `http://192.168.0.100:3000/api/bookings/${id}`,
       method: 'PUT',
       data: { status: 'confirmed' },
       header: { 'Content-Type': 'application/json' },
@@ -614,7 +614,7 @@ Page({
   rejectActivityBooking(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/bookings/${id}`,
+      url: `http://192.168.0.100:3000/api/bookings/${id}`,
       method: 'PUT',
       data: { status: 'cancelled' },
       header: { 'Content-Type': 'application/json' },
@@ -628,7 +628,7 @@ Page({
   openVenueReview() {
     this.setData({ showVenueReviewModal: true });
     wx.request({
-      url: 'http://192.168.43.222:3000/api/pending_venues',
+      url: 'http://192.168.0.100:3000/api/pending_venues',
       method: 'GET',
       success: (res) => {
         this.setData({ pendingVenues: Array.isArray(res.data) ? res.data : [] });
@@ -641,7 +641,7 @@ Page({
   approveVenue(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/venues/${id}`,
+      url: `http://192.168.0.100:3000/api/venues/${id}`,
       method: 'PUT',
       data: { status: 'approved' },
       header: { 'Content-Type': 'application/json' },
@@ -651,7 +651,7 @@ Page({
   rejectVenue(e: any) {
     const id = e.currentTarget.dataset.id;
     wx.request({
-      url: `http://192.168.43.222:3000/api/venues/${id}`,
+      url: `http://192.168.0.100:3000/api/venues/${id}`,
       method: 'PUT',
       data: { status: 'rejected' },
       header: { 'Content-Type': 'application/json' },
@@ -662,7 +662,7 @@ Page({
     const activityId = e.currentTarget.dataset.id;
     this.setData({ showManageCommentsModal: true, manageCommentsList: [] });
     wx.request({
-      url: `http://192.168.43.222:3000/api/comments/${activityId}`,
+      url: `http://192.168.0.100:3000/api/comments/${activityId}`,
       method: 'GET',
       success: (res) => {
         // 拉平成一维评论列表
@@ -690,7 +690,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           wx.request({
-            url: `http://192.168.43.222:3000/api/comments/${id}`,
+            url: `http://192.168.0.100:3000/api/comments/${id}`,
             method: 'DELETE',
             success: () => {
               wx.showToast({ title: '删除成功' });
@@ -729,7 +729,7 @@ Page({
       return;
     }
     wx.uploadFile({
-      url: 'http://192.168.43.222:3000/api/upload',
+      url: 'http://192.168.0.100:3000/api/upload',
       filePath: newAvatarUrl,
       name: 'file',
       success: (res) => {
@@ -752,9 +752,9 @@ Page({
     const { userInfo } = this.data;
     if (!userInfo || !userInfo.id) return;
     // 拼接完整头像地址
-    const fullUrl = url.startsWith('http') ? url : `http://192.168.43.222:3000${url}`;
+    const fullUrl = url.startsWith('http') ? url : `http://192.168.0.100:3000${url}`;
     wx.request({
-      url: `http://192.168.43.222:3000/api/users/${userInfo.id}`,
+      url: `http://192.168.0.100:3000/api/users/${userInfo.id}`,
       method: 'PUT',
       data: { avatar_url: fullUrl },
       header: { 'Content-Type': 'application/json' },
@@ -791,7 +791,7 @@ Page({
       return;
     }
     wx.request({
-      url: `http://192.168.43.222:3000/api/users/${userInfo.id}`,
+      url: `http://192.168.0.100:3000/api/users/${userInfo.id}`,
       method: 'PUT',
       data: { nickname: newNickname.trim() },
       header: { 'Content-Type': 'application/json' },
@@ -813,7 +813,7 @@ Page({
   openAdminVenueManage() {
     this.setData({ showAdminVenueManageModal: true });
     wx.request({
-      url: 'http://192.168.43.222:3000/api/all_venues',
+      url: 'http://192.168.0.100:3000/api/all_venues',
       method: 'GET',
       success: (res) => {
         this.setData({ adminAllVenues: Array.isArray(res.data) ? res.data : [] });
@@ -831,7 +831,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           wx.request({
-            url: `http://192.168.43.222:3000/api/venues/${id}`,
+            url: `http://192.168.0.100:3000/api/venues/${id}`,
             method: 'PUT',
             data: { status: 'ended' },
             header: { 'Content-Type': 'application/json' },
@@ -849,7 +849,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           wx.request({
-            url: `http://192.168.43.222:3000/api/venues/${id}`,
+            url: `http://192.168.0.100:3000/api/venues/${id}`,
             method: 'DELETE',
             success: () => this.openAdminVenueManage()
           });
