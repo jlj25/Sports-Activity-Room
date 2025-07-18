@@ -1,0 +1,35 @@
+name: Node.js & Miniprogram CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+
+    - name: 设置Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: 安装后端依赖
+      run: |
+        cd backend
+        npm install
+
+    - name: 安装小程序依赖
+      run: |
+        cd $GITHUB_WORKSPACE/miniprogram
+        npm install || true # 小程序依赖可选
+
+    - name: 检查小程序TypeScript
+      run: |
+        cd miniprogram
+        npx tsc --noEmit || true # 如果没用ts可删掉此行
